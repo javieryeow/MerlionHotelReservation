@@ -15,9 +15,7 @@ import javax.persistence.*;
  * @author javieryeow
  */
 @Entity
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-@DiscriminatorColumn(name = "employee_type", discriminatorType = DiscriminatorType.STRING)
-@Table(name = "employee")
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Employee implements Serializable {
 
     private static final long serialVersionUID = 1L;

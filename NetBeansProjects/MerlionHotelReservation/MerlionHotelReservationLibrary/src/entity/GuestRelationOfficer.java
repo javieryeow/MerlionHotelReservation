@@ -16,10 +16,12 @@ import javax.persistence.Id;
  * @author javieryeow
  */
 @Entity
-@DiscriminatorValue("GRO")
-public class GuestRelationOfficer extends Employee {
+public class GuestRelationOfficer extends Employee implements Serializable {
+
+    private static final long serialVersionUID = 1L;
     
     public GuestRelationOfficer() {
+        super();
     }
     
     public GuestRelationOfficer(String username, String password) {

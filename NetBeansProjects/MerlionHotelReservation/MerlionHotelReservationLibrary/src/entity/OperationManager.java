@@ -17,8 +17,9 @@ import javax.persistence.Id;
  */
 @Entity
 @DiscriminatorValue("OperationManager")
-public class OperationManager extends Employee {
-
+public class OperationManager extends Employee implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     
     public OperationManager() {
         super();

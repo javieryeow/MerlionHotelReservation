@@ -16,8 +16,10 @@ import javax.persistence.Id;
  * @author javieryeow
  */
 @Entity
-@DiscriminatorValue("SystemAdmin")
-public class SystemAdministrator extends Employee {
+
+public class SystemAdministrator extends Employee implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
 
      public SystemAdministrator() {
         super();

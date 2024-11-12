@@ -1,8 +1,11 @@
 import ejb.session.stateless.CreateCustomerSessionBeanRemote;
 import ejb.session.stateless.CreateReservationSessionBeanRemote;
 import entity.Customer;
+import entity.CustomerReservation;
+import entity.RoomType;
 import java.util.Scanner;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main {

@@ -111,6 +111,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return applicableRate != null ? applicableRate : BigDecimal.ZERO;
     }
 
+    @Override
     public ReservationDetails addReservationDetail(CustomerReservation reservation, LocalDate reservationDate, double priceForNight, RoomType roomType) { 
         ReservationDetails reservationDetail = new ReservationDetails();
         reservationDetail.setReservationDate(reservationDate);
@@ -127,6 +128,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return reservationDetail;
     }
         
+    @Override
     public void updateReservationStatus(Long reservationId, CustomerReservation.ReservationStatus newStatus) throws Exception {
         CustomerReservation reservation = em.find(CustomerReservation.class, reservationId);
 
@@ -160,6 +162,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         }
     }
 
+    @Override
     public CustomerReservation viewCustomerReservation(Long customerId, Long reservationId) {
         Customer customer = em.find(Customer.class, customerId);
         if (customer != null) {
@@ -171,11 +174,13 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return null;
     }
 
+    @Override
     public List<CustomerReservation> viewAllReservations() {
         Query query = em.createQuery("Select r from CustomerReservation r");
         return query.getResultList();
     }
 
+    @Override
     public CustomerReservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception {
         if (customer == null) {
             throw new Exception("Customer not found.");
