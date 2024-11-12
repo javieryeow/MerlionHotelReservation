@@ -6,6 +6,7 @@ package ejb.session.stateless;
 
 import entity.Room;
 import entity.Room.RoomStatus;
+import entity.RoomType;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -21,16 +22,27 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
     
-    public Long createRoom(Room room) {
+    @Override
+    public Long createRoom(String roomNumber, RoomType roomType) {
+        Room room = new Room();
+        room.setRoomNumber(roomNumber);
+        room.setRoomType(roomType);
         em.persist(room);
         em.flush();
         return room.getRoomId();
     }
     
-    public void updateRoom(Room room) {
-        em.merge(room);
+    @Override
+    public void updateRoom(Long roomId, String roomNumber, RoomType roomType, RoomStatus status) {
+        Room room = em.find(Room.class, roomId);
+        if (room != null) {
+            room.setRoomNumber(roomNumber);
+            room.setRoomType(roomType);
+            room.setStatus(status);
+        }
     }
 
+    @Override
     public void deleteRoom(Long roomId) {
         Room room = em.find(Room.class, roomId);
         if (room != null) {
@@ -53,7 +65,5 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
             em.merge(room);
         }
     }
-    
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+
 }

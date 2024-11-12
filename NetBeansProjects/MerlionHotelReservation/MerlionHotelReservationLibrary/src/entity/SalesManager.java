@@ -16,10 +16,12 @@ import javax.persistence.Id;
  * @author javieryeow
  */
 @Entity
-@DiscriminatorValue("SalesManager")
-public class SalesManager extends Employee {
+public class SalesManager extends Employee implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     
     public SalesManager() {
+        super();
     }
     
     public SalesManager(String username, String password) {

@@ -7,11 +7,17 @@ import java.util.Scanner;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import javax.ejb.EJB;
 
 public class Main {
 
+    
+    @EJB
     private CreateCustomerSessionBeanRemote createCustomerSessionBean;
+    
+    @EJB
     private CreateReservationSessionBeanRemote createReservationSessionBean;
+    
     private boolean isGuestLoggedIn = false;
     private Customer loggedInCustomer;
 

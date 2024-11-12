@@ -30,21 +30,34 @@ public class RoomType implements Serializable {
     @Column(length = 255)
     private String description;
     
+    @Column(nullable = false)
     private int size;
     
+    @Column(nullable = false)
     private int bed;
     
+    @Column(nullable = false)
     private int capacity;
     
-    @ElementCollection
+    @Column(nullable = false)
     private List<String> amenities;
+    
+    @OneToMany(mappedBy = "roomType")
+    private List<Room> rooms;
+    
+    @OneToMany(mappedBy = "roomType")
+    private List<RoomRate> roomRates;
 
     private boolean enabled = true;
 
     public RoomType() {
+        this.amenities = new ArrayList<String>();
+        this.rooms = new ArrayList<Room>();
+        this.roomRates = new ArrayList<RoomRate>();
     }
 
     public RoomType(String name, String description, int size, int bed, int capacity, List<String> amenities) {
+        this();
         this.name = name;
         this.description = description;
         this.size = size;
@@ -185,6 +198,20 @@ public class RoomType implements Serializable {
     
     public void setDisabled() {
         this.enabled = false;
+    }
+
+    /**
+     * @return the rooms
+     */
+    public List<Room> getRooms() {
+        return rooms;
+    }
+
+    /**
+     * @param rooms the rooms to set
+     */
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
     }
     
 }

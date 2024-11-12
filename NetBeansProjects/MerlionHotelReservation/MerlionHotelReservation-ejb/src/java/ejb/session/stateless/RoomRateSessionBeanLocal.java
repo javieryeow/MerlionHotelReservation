@@ -18,15 +18,19 @@ import javax.ejb.Local;
 @Local
 public interface RoomRateSessionBeanLocal {
 
-    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate);
+    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate);
 
     public RoomRate viewRoomRateDetails(Long roomRateId);
 
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate);
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate);
 
     public void deleteRoomRate(Long roomRateId);
 
     public List<RoomRate> viewAllRoomRates();
+
+    
+
+    
     
     
 }
