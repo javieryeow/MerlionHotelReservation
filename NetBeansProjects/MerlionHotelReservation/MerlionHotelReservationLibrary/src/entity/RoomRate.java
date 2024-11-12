@@ -39,7 +39,7 @@ public class RoomRate implements Serializable {
     private RateType rateType;
     
     @Column(nullable = false)
-    private int ratePerNight;
+    private BigDecimal ratePerNight;
     
     private LocalDate startDate; // Only for PEAK and PROMOTION
     
@@ -55,7 +55,7 @@ public class RoomRate implements Serializable {
     public RoomRate() {
     }
 
-    public RoomRate(String name, RoomType roomType, RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate) {
+    public RoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate) {
         this.name = name;
         this.roomType = roomType;
         this.rateType = rateType;
@@ -143,14 +143,14 @@ public class RoomRate implements Serializable {
     /**
      * @return the ratePerNight
      */
-    public int getRatePerNight() {
+    public BigDecimal getRatePerNight() {
         return ratePerNight;
     }
 
     /**
      * @param ratePerNight the ratePerNight to set
      */
-    public void setRatePerNight(int ratePerNight) {
+    public void setRatePerNight(BigDecimal ratePerNight) {
         this.ratePerNight = ratePerNight;
     }
 

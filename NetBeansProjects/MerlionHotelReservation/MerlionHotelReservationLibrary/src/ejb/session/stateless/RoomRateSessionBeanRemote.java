@@ -18,11 +18,11 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomRateSessionBeanRemote {
     
-    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate);
+    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate);
     
     public RoomRate viewRoomRateDetails(Long roomRateId);
 
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate);
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate);
 
     public void deleteRoomRate(Long roomRateId);
 
