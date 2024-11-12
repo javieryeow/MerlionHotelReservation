@@ -29,6 +29,10 @@ public class OperationManager extends Employee implements Serializable {
         super(username, password, role.OPERATION_MANAGER);
     }
 
+    public OperationManager(String opmanager, String password, role role) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     @Override
     public String toString() {
         return "entity.OperationManager[ id=" + super.employeeId + " ]";

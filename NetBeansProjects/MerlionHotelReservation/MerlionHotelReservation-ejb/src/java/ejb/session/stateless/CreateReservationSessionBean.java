@@ -5,11 +5,8 @@
 package ejb.session.stateless;
 
 import entity.Customer;
-import entity.CustomerReservation;
-import entity.Employee;
-import entity.ReservationDetails; // Ensure the correct entity name is used here
+import entity.Reservation;
 import entity.RoomRate;
-import entity.RoomRate.RateType;
 import entity.RoomType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,8 +27,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     @Override
     public List<RoomType> searchAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
-        
-        // Retrieve all room types
+
         List<RoomType> allRoomTypes = em.createQuery("SELECT rt FROM RoomType rt", RoomType.class).getResultList();
 
         for (RoomType roomType : allRoomTypes) {
@@ -39,38 +35,20 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
                 availableRoomTypes.add(roomType);
             }
         }
-        
+
         return availableRoomTypes;
     }
 
     private boolean isRoomTypeAvailable(RoomType roomType, LocalDate checkInDate, LocalDate checkOutDate) {
-        Query query = em.createQuery("SELECT COUNT(rd) FROM ReservationDetail rd WHERE rd.roomType = :roomType AND rd.reservationDate BETWEEN :checkInDate AND :checkOutDate");
+        Query query = em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.roomType = :roomType AND r.checkInDate <= :checkOutDate AND r.checkOutDate >= :checkInDate");
         query.setParameter("roomType", roomType);
         query.setParameter("checkInDate", checkInDate);
-        query.setParameter("checkOutDate", checkOutDate.minusDays(1));
+        query.setParameter("checkOutDate", checkOutDate);
 
         Long reservedCount = (Long) query.getSingleResult();
         int availableRooms = roomType.getCapacity();
 
         return reservedCount < availableRooms;
-    }
-    
-    @Override
-    public CustomerReservation createReservation(Customer customer, LocalDate checkInDate, LocalDate checkOutDate, double totalCost) {
-        CustomerReservation reservation = new CustomerReservation();
-        reservation.setCheckInDate(checkInDate);
-        reservation.setCheckOutDate(checkOutDate);
-        reservation.setTotalCost(totalCost);
-        reservation.setStatus(CustomerReservation.ReservationStatus.PENDING);
-        reservation.setCustomer(customer);
-
-        em.persist(reservation);
-        em.flush();
-
-        customer.getReservations().add(reservation);
-        em.merge(customer);
-
-        return reservation;
     }
 
     @Override
@@ -88,55 +66,37 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     private BigDecimal getApplicableRate(RoomType roomType, LocalDate date) {
-        List<RoomRate> rates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate", RoomRate.class)
+        List<RoomRate> rates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
                                   .setParameter("roomType", roomType)
                                   .setParameter("date", date)
                                   .getResultList();
 
-        BigDecimal applicableRate = null;
+        BigDecimal applicableRate = BigDecimal.ZERO;
 
         for (RoomRate rate : rates) {
-            if (rate.getRateType() == RateType.PROMOTION) {
+            if (rate.getRateType() == RoomRate.RateType.PROMOTION) {
+                return rate.getRatePerNight();
+            } else if (rate.getRateType() == RoomRate.RateType.PEAK) {
+                applicableRate = applicableRate.max(rate.getRatePerNight());
+            } else if (rate.getRateType() == RoomRate.RateType.NORMAL && applicableRate.compareTo(rate.getRatePerNight()) < 0) {
                 applicableRate = rate.getRatePerNight();
-                break;
-            } else if (rate.getRateType() == RateType.PEAK && (applicableRate == null || applicableRate.compareTo(rate.getRatePerNight()) < 0)) {
-                applicableRate = rate.getRatePerNight();
-            } else if (rate.getRateType() == RateType.NORMAL && (applicableRate == null || applicableRate.compareTo(rate.getRatePerNight()) < 0)) {
-                applicableRate = rate.getRatePerNight();
-            } else if (rate.getRateType() == RateType.PUBLISHED && applicableRate == null) {
+            } else if (rate.getRateType() == RoomRate.RateType.PUBLISHED && applicableRate.equals(BigDecimal.ZERO)) {
                 applicableRate = rate.getRatePerNight();
             }
         }
 
-        return applicableRate != null ? applicableRate : BigDecimal.ZERO;
+        return applicableRate;
     }
 
     @Override
-    public ReservationDetails addReservationDetail(CustomerReservation reservation, LocalDate reservationDate, double priceForNight, RoomType roomType) { 
-        ReservationDetails reservationDetail = new ReservationDetails();
-        reservationDetail.setReservationDate(reservationDate);
-        reservationDetail.setPriceForNight(priceForNight);
-        reservationDetail.setReservation(reservation);
-        reservationDetail.setRoomType(roomType);
-
-        em.persist(reservationDetail);
-        em.flush();
-
-        reservation.getReservationDetails().add(reservationDetail);
-        em.merge(reservation);
-
-        return reservationDetail;
-    }
-        
-    @Override
-    public void updateReservationStatus(Long reservationId, CustomerReservation.ReservationStatus newStatus) throws Exception {
-        CustomerReservation reservation = em.find(CustomerReservation.class, reservationId);
+    public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception {
+        Reservation reservation = em.find(Reservation.class, reservationId);
 
         if (reservation == null) {
             throw new Exception("Reservation not found.");
         }
 
-        CustomerReservation.ReservationStatus currentStatus = reservation.getStatus();
+        Reservation.ReservationStatus currentStatus = reservation.getStatus();
 
         if (!isValidStatusTransition(currentStatus, newStatus)) {
             throw new Exception("Invalid status transition from " + currentStatus + " to " + newStatus);
@@ -146,14 +106,14 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         em.merge(reservation);
     }
 
-    private boolean isValidStatusTransition(CustomerReservation.ReservationStatus currentStatus, CustomerReservation.ReservationStatus newStatus) {
+    private boolean isValidStatusTransition(Reservation.ReservationStatus currentStatus, Reservation.ReservationStatus newStatus) {
         switch (currentStatus) {
             case PENDING:
-                return newStatus == CustomerReservation.ReservationStatus.CONFIRMED || newStatus == CustomerReservation.ReservationStatus.CANCELLED;
+                return newStatus == Reservation.ReservationStatus.CONFIRMED || newStatus == Reservation.ReservationStatus.CANCELLED;
             case CONFIRMED:
-                return newStatus == CustomerReservation.ReservationStatus.CHECKED_IN || newStatus == CustomerReservation.ReservationStatus.CANCELLED;
+                return newStatus == Reservation.ReservationStatus.CHECKED_IN || newStatus == Reservation.ReservationStatus.CANCELLED;
             case CHECKED_IN:
-                return newStatus == CustomerReservation.ReservationStatus.CHECKED_OUT;
+                return newStatus == Reservation.ReservationStatus.CHECKED_OUT;
             case CANCELLED:
             case CHECKED_OUT:
                 return false;
@@ -163,7 +123,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public CustomerReservation viewCustomerReservation(Long customerId, Long reservationId) {
+    public Reservation viewCustomerReservation(Long customerId, Long reservationId) {
         Customer customer = em.find(Customer.class, customerId);
         if (customer != null) {
             return customer.getReservations().stream()
@@ -175,19 +135,21 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public List<CustomerReservation> viewAllReservations() {
-        Query query = em.createQuery("Select r from CustomerReservation r");
-        return query.getResultList();
+    public List<Reservation> viewAllReservations(Long customerId) {
+        Customer customer = em.find(Customer.class, customerId);
+        return customer != null ? customer.getReservations() : new ArrayList<>();
     }
 
     @Override
-    public CustomerReservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception {
+    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception {
         if (customer == null) {
             throw new Exception("Customer not found.");
         }
 
-        List<ReservationDetails> reservationDetails = new ArrayList<>();
         BigDecimal totalCost = BigDecimal.ZERO;
+        List<RoomRate> applicableRates = new ArrayList<>();
+
+        RoomType selectedRoomType = null;
 
         for (Long roomTypeId : roomTypeIds) {
             RoomType roomType = em.find(RoomType.class, roomTypeId);
@@ -199,31 +161,26 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
                 throw new Exception("Room Type " + roomType.getName() + " is not available for the selected dates.");
             }
 
-            BigDecimal roomTotalCost = calculateTotalCost(roomType, checkInDate, checkOutDate);
-            totalCost = totalCost.add(roomTotalCost);
-
-            LocalDate currentDate = checkInDate;
-            while (!currentDate.isAfter(checkOutDate.minusDays(1))) {
-                BigDecimal nightlyRate = getApplicableRate(roomType, currentDate);
-                ReservationDetails detail = new ReservationDetails();
-                detail.setReservationDate(currentDate);
-                detail.setPriceForNight(nightlyRate.doubleValue());
-                detail.setRoomType(roomType);
-                detail.setReservation(null);
-
-                reservationDetails.add(detail);
-                currentDate = currentDate.plusDays(1);
-            }
+            totalCost = totalCost.add(calculateTotalCost(roomType, checkInDate, checkOutDate));
+            selectedRoomType = roomType;
         }
 
-        CustomerReservation reservation = createReservation(customer, checkInDate, checkOutDate, totalCost.doubleValue());
-        for (ReservationDetails detail : reservationDetails) {
-            detail.setReservation(reservation);
-            em.persist(detail);
-            reservation.getReservationDetails().add(detail);
+        Reservation reservation = new Reservation();
+        reservation.setCheckInDate(checkInDate);
+        reservation.setCheckOutDate(checkOutDate);
+        reservation.setTotalCost(totalCost);
+        reservation.setStatus(Reservation.ReservationStatus.PENDING);
+        reservation.setCustomer(customer);
+        reservation.setRoomType(selectedRoomType); // Set selected room type
+
+        em.persist(reservation);
+        em.flush();
+
+        if (customer.getReservations() == null) {
+            customer.setReservations(new ArrayList<>());
         }
-        
-        em.merge(reservation);
+        customer.getReservations().add(reservation);
+        em.merge(customer);
 
         if (checkInDate.equals(LocalDate.now()) && LocalTime.now().isAfter(LocalTime.of(2, 0))) {
             allocateRoomsImmediately(reservation);
@@ -232,11 +189,11 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return reservation;
     }
 
-    private void allocateRoomsImmediately(CustomerReservation reservation) {
-        for (ReservationDetails detail : reservation.getReservationDetails()) {
-            System.out.println("Allocating room for " + detail.getReservationDate() + " for reservation ID: " + reservation.getReservationId());
-        }
-        reservation.setStatus(CustomerReservation.ReservationStatus.CONFIRMED);
+    private void allocateRoomsImmediately(Reservation reservation) {
+        System.out.println("Allocating rooms for reservation ID: " + reservation.getReservationId());
+        reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
         em.merge(reservation);
     }
 }
+
+

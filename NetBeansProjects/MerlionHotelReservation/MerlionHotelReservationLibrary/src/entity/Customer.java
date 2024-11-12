@@ -5,6 +5,7 @@
 package entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -44,12 +45,15 @@ public class Customer implements Serializable {
     private String password;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
-    private List<CustomerReservation> reservations;
+    private List<Reservation> reservations;
 
     public Customer() {
+        this.reservations = new ArrayList<Reservation>();
     }
 
     public Customer(String firstName, String lastName, String email, String phoneNumber) {
+        
+        this();
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
@@ -131,11 +135,11 @@ public class Customer implements Serializable {
     }
     
 
-    public List<CustomerReservation> getReservations() {
+    public List<Reservation> getReservations() {
         return reservations;
     }
 
-    public void setReservations(List<CustomerReservation> reservations) {
+    public void setReservations(List<Reservation> reservations) {
         this.reservations = reservations;
     }
 

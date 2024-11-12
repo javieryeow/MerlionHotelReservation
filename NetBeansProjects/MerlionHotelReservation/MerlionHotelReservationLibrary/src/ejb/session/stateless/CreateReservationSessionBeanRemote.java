@@ -6,6 +6,7 @@ package ejb.session.stateless;
 
 import entity.Customer;
 import entity.CustomerReservation;
+import entity.Reservation;
 import entity.ReservationDetails;
 import entity.RoomType;
 import java.math.BigDecimal;
@@ -20,19 +21,22 @@ import javax.ejb.Remote;
 @Remote
 public interface CreateReservationSessionBeanRemote {
     
-    public List<RoomType> searchAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate);
-    
-    public CustomerReservation createReservation(Customer customer, LocalDate checkInDate, LocalDate checkOutDate, double totalCost);
-    
+     public List<RoomType> searchAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate);
+
+    // Calculate total cost based on room type and date range
     public BigDecimal calculateTotalCost(RoomType roomType, LocalDate checkInDate, LocalDate checkOutDate);
-    
-    public ReservationDetails addReservationDetail(CustomerReservation reservation, LocalDate reservationDate, double priceForNight, RoomType roomType);
-    
-    public void updateReservationStatus(Long reservationId, CustomerReservation.ReservationStatus newStatus) throws Exception;
-    
-    public CustomerReservation viewCustomerReservation(Long customerId, Long reservationId);
-    
-    public List<CustomerReservation> viewAllReservations();
-    
-    public CustomerReservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception;
+
+    // View a specific customer reservation
+    public Reservation viewCustomerReservation(Long customerId, Long reservationId);
+
+    // Reserve a hotel room with a list of room type IDs and date range
+    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception;
+
+    // View all reservations of a specific customer
+    public List<Reservation> viewAllReservations(Long customerId);
+
+    // Update the reservation status
+    public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception;
+
+ 
 }

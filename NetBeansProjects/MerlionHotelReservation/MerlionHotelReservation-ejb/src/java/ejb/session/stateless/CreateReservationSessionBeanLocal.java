@@ -5,35 +5,31 @@
 package ejb.session.stateless;
 
 import entity.Customer;
-import entity.CustomerReservation;
-import entity.ReservationDetails;
+import entity.Reservation;
 import entity.RoomType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import javax.ejb.Local;
 
-/**
- *
- * @author wkgaret
- */
 @Local
 public interface CreateReservationSessionBeanLocal {
 
+    // Search for available rooms within a date range
     public List<RoomType> searchAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate);
 
-    public CustomerReservation createReservation(Customer customer, LocalDate checkInDate, LocalDate checkOutDate, double totalCost);
-
+    // Calculate total cost based on room type and date range
     public BigDecimal calculateTotalCost(RoomType roomType, LocalDate checkInDate, LocalDate checkOutDate);
 
-    public ReservationDetails addReservationDetail(CustomerReservation reservation, LocalDate reservationDate, double priceForNight, RoomType roomType);
+    // View a specific customer reservation
+    public Reservation viewCustomerReservation(Long customerId, Long reservationId);
 
-    public void updateReservationStatus(Long reservationId, CustomerReservation.ReservationStatus newStatus) throws Exception;
+    // Reserve a hotel room with a list of room type IDs and date range
+    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception;
 
-    public CustomerReservation viewCustomerReservation(Long customerId, Long reservationId);
+    // View all reservations of a specific customer
+    public List<Reservation> viewAllReservations(Long customerId);
 
-    public List<CustomerReservation> viewAllReservations();
-
-    public CustomerReservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception;
-    
+    // Update the reservation status
+    public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception;
 }

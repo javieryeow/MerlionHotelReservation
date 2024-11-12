@@ -1,19 +1,18 @@
-import entity.Employee;
-import entity.GuestRelationOfficer;
-import entity.OperationManager;
-import entity.Room;
-import entity.RoomRate;
-import entity.RoomType;
-import entity.SalesManager;
+package ejb.session.singleton;
+
 import entity.SystemAdministrator;
+import entity.OperationManager;
+import entity.SalesManager;
+import entity.GuestRelationOfficer;
+import entity.RoomType;
+import entity.RoomRate;
+import entity.Room;
 import javax.annotation.PostConstruct;
 import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Arrays;
 
 @Singleton
 @Startup
@@ -22,8 +21,15 @@ public class DataInSessionBean {
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
 
+    // RoomType variables to hold references
+    private RoomType deluxeRoomType;
+    private RoomType premierRoomType;
+    private RoomType familyRoomType;
+    private RoomType juniorSuiteType;
+    private RoomType grandSuiteType;
+
     @PostConstruct
-    public void init() {
+    public void initializeData() {
         initializeEmployees();
         initializeRoomTypes();
         initializeRoomRates();
@@ -32,77 +38,77 @@ public class DataInSessionBean {
 
     private void initializeEmployees() {
         if (em.createQuery("SELECT COUNT(e) FROM Employee e", Long.class).getSingleResult() == 0) {
-            em.persist(new SystemAdministrator("sysadmin", "password", Employee.role.SYSTEM_ADMIN));
-            em.persist(new OperationManager("opmanager", "password", Employee.role.OPERATION_MANAGER));
-            em.persist(new SalesManager("salesmanager", "password", Employee.role.SALES_MANAGER));
-            em.persist(new GuestRelationOfficer("GROfficer", "password", Employee.role.GUEST_RELATIONS_OFFICER));
+            em.persist(new SystemAdministrator("sysadmin", "password"));
+            em.persist(new OperationManager("opmanager", "password"));
+            em.persist(new SalesManager("salesmanager", "password"));
+            em.persist(new GuestRelationOfficer("guestrelo", "password"));
             em.flush();
-            System.out.println("Employees initialized.");
         }
     }
 
     private void initializeRoomTypes() {
         if (em.createQuery("SELECT COUNT(rt) FROM RoomType rt", Long.class).getSingleResult() == 0) {
-            RoomType deluxeRoom = new RoomType("Deluxe Room", "Spacious deluxe room", 300, 1, 2, Arrays.asList("WiFi", "TV"));
-            RoomType premierRoom = new RoomType("Premier Room", "Elegant premier room", 400, 1, 2, Arrays.asList("WiFi", "TV", "Mini Bar"));
-            RoomType familyRoom = new RoomType("Family Room", "Large family room", 500, 2, 4, Arrays.asList("WiFi", "TV", "Mini Bar", "Sofa Bed"));
-            RoomType juniorSuite = new RoomType("Junior Suite", "Luxurious junior suite", 600, 1, 3, Arrays.asList("WiFi", "TV", "Mini Bar", "Sofa Bed", "Balcony"));
-            RoomType grandSuite = new RoomType("Grand Suite", "Grand luxury suite", 800, 2, 5, Arrays.asList("WiFi", "TV", "Mini Bar", "Jacuzzi"));
+            deluxeRoomType = new RoomType("Deluxe Room", "Next higher: Premier Room", 25, 1, 2, null);
+            premierRoomType = new RoomType("Premier Room", "Next higher: Family Room", 30, 1, 3, null);
+            familyRoomType = new RoomType("Family Room", "Next higher: Junior Suite", 35, 2, 4, null);
+            juniorSuiteType = new RoomType("Junior Suite", "Next higher: Grand Suite", 40, 2, 4, null);
+            grandSuiteType = new RoomType("Grand Suite", "Highest room type", 50, 3, 5, null);
 
-            em.persist(deluxeRoom);
-            em.persist(premierRoom);
-            em.persist(familyRoom);
-            em.persist(juniorSuite);
-            em.persist(grandSuite);
+            em.persist(deluxeRoomType);
+            em.persist(premierRoomType);
+            em.persist(familyRoomType);
+            em.persist(juniorSuiteType);
+            em.persist(grandSuiteType);
             em.flush();
-            System.out.println("Room Types initialized.");
         }
     }
 
     private void initializeRoomRates() {
         if (em.createQuery("SELECT COUNT(rr) FROM RoomRate rr", Long.class).getSingleResult() == 0) {
-            RoomType deluxeRoom = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Deluxe Room'", RoomType.class).getSingleResult();
-            RoomType premierRoom = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Premier Room'", RoomType.class).getSingleResult();
-            RoomType familyRoom = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Family Room'", RoomType.class).getSingleResult();
-            RoomType juniorSuite = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Junior Suite'", RoomType.class).getSingleResult();
-            RoomType grandSuite = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Grand Suite'", RoomType.class).getSingleResult();
-
-            em.persist(new RoomRate("Deluxe Room Published", deluxeRoom, RoomRate.RateType.PUBLISHED, new BigDecimal("100"), null, null));
-            em.persist(new RoomRate("Deluxe Room Normal", deluxeRoom, RoomRate.RateType.NORMAL, new BigDecimal("50"), null, null));
-            em.persist(new RoomRate("Premier Room Published", premierRoom, RoomRate.RateType.PUBLISHED, new BigDecimal("200"), null, null));
-            em.persist(new RoomRate("Premier Room Normal", premierRoom, RoomRate.RateType.NORMAL, new BigDecimal("100"), null, null));
-            em.persist(new RoomRate("Family Room Published", familyRoom, RoomRate.RateType.PUBLISHED, new BigDecimal("300"), null, null));
-            em.persist(new RoomRate("Family Room Normal", familyRoom, RoomRate.RateType.NORMAL, new BigDecimal("150"), null, null));
-            em.persist(new RoomRate("Junior Suite Published", juniorSuite, RoomRate.RateType.PUBLISHED, new BigDecimal("400"), null, null));
-            em.persist(new RoomRate("Junior Suite Normal", juniorSuite, RoomRate.RateType.NORMAL, new BigDecimal("200"), null, null));
-            em.persist(new RoomRate("Grand Suite Published", grandSuite, RoomRate.RateType.PUBLISHED, new BigDecimal("500"), null, null));
-            em.persist(new RoomRate("Grand Suite Normal", grandSuite, RoomRate.RateType.NORMAL, new BigDecimal("250"), null, null));
+            em.persist(new RoomRate("Deluxe Room Published", deluxeRoomType, RoomRate.RateType.PUBLISHED, new BigDecimal("100"), null, null));
+            em.persist(new RoomRate("Deluxe Room Normal", deluxeRoomType, RoomRate.RateType.NORMAL, new BigDecimal("50"), null, null));
+            em.persist(new RoomRate("Premier Room Published", premierRoomType, RoomRate.RateType.PUBLISHED, new BigDecimal("200"), null, null));
+            em.persist(new RoomRate("Premier Room Normal", premierRoomType, RoomRate.RateType.NORMAL, new BigDecimal("100"), null, null));
+            em.persist(new RoomRate("Family Room Published", familyRoomType, RoomRate.RateType.PUBLISHED, new BigDecimal("300"), null, null));
+            em.persist(new RoomRate("Family Room Normal", familyRoomType, RoomRate.RateType.NORMAL, new BigDecimal("150"), null, null));
+            em.persist(new RoomRate("Junior Suite Published", juniorSuiteType, RoomRate.RateType.PUBLISHED, new BigDecimal("400"), null, null));
+            em.persist(new RoomRate("Junior Suite Normal", juniorSuiteType, RoomRate.RateType.NORMAL, new BigDecimal("200"), null, null));
+            em.persist(new RoomRate("Grand Suite Published", grandSuiteType, RoomRate.RateType.PUBLISHED, new BigDecimal("500"), null, null));
+            em.persist(new RoomRate("Grand Suite Normal", grandSuiteType, RoomRate.RateType.NORMAL, new BigDecimal("250"), null, null));
             em.flush();
-            System.out.println("Room Rates initialized.");
         }
     }
 
     private void initializeRooms() {
         if (em.createQuery("SELECT COUNT(r) FROM Room r", Long.class).getSingleResult() == 0) {
-            RoomType deluxeRoom = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Deluxe Room'", RoomType.class).getSingleResult();
-            RoomType premierRoom = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Premier Room'", RoomType.class).getSingleResult();
-            RoomType familyRoom = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Family Room'", RoomType.class).getSingleResult();
-            RoomType juniorSuite = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Junior Suite'", RoomType.class).getSingleResult();
-            RoomType grandSuite = em.createQuery("SELECT rt FROM RoomType rt WHERE rt.name = 'Grand Suite'", RoomType.class).getSingleResult();
-
-            String[][] roomData = {
-                {"0101", deluxeRoom}, {"0201", deluxeRoom}, {"0301", deluxeRoom}, {"0401", deluxeRoom}, {"0501", deluxeRoom},
-                {"0102", premierRoom}, {"0202", premierRoom}, {"0302", premierRoom}, {"0402", premierRoom}, {"0502", premierRoom},
-                {"0103", familyRoom}, {"0203", familyRoom}, {"0303", familyRoom}, {"0403", familyRoom}, {"0503", familyRoom},
-                {"0104", juniorSuite}, {"0204", juniorSuite}, {"0304", juniorSuite}, {"0404", juniorSuite}, {"0504", juniorSuite},
-                {"0105", grandSuite}, {"0205", grandSuite}, {"0305", grandSuite}, {"0405", grandSuite}, {"0505", grandSuite},
-            };
-
-            for (String[] room : roomData) {
-                em.persist(new Room(room[0], room[1]));
-            }
+            em.persist(new Room("0101", deluxeRoomType));
+            em.persist(new Room("0201", deluxeRoomType));
+            em.persist(new Room("0301", deluxeRoomType));
+            em.persist(new Room("0401", deluxeRoomType));
+            em.persist(new Room("0501", deluxeRoomType));
+            em.persist(new Room("0102", premierRoomType));
+            em.persist(new Room("0202", premierRoomType));
+            em.persist(new Room("0302", premierRoomType));
+            em.persist(new Room("0402", premierRoomType));
+            em.persist(new Room("0502", premierRoomType));
+            em.persist(new Room("0103", familyRoomType));
+            em.persist(new Room("0203", familyRoomType));
+            em.persist(new Room("0303", familyRoomType));
+            em.persist(new Room("0403", familyRoomType));
+            em.persist(new Room("0503", familyRoomType));
+            em.persist(new Room("0104", juniorSuiteType));
+            em.persist(new Room("0204", juniorSuiteType));
+            em.persist(new Room("0304", juniorSuiteType));
+            em.persist(new Room("0404", juniorSuiteType));
+            em.persist(new Room("0504", juniorSuiteType));
+            em.persist(new Room("0105", grandSuiteType));
+            em.persist(new Room("0205", grandSuiteType));
+            em.persist(new Room("0305", grandSuiteType));
+            em.persist(new Room("0405", grandSuiteType));
+            em.persist(new Room("0505", grandSuiteType));
             em.flush();
-            System.out.println("Rooms initialized.");
         }
     }
 }
+
+

@@ -29,6 +29,10 @@ public class SystemAdministrator extends Employee implements Serializable {
         super(username, password, role.SYSTEM_ADMIN);
     }
 
+    public SystemAdministrator(String sysadmin, String password, role role) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     @Override
     public String toString() {
         return "entity.SystemAdministrator[ id=" + super.employeeId + " ]";
