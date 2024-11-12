@@ -15,14 +15,18 @@ import javax.ejb.Local;
 @Local
 public interface RoomTypeSessionBeanLocal {
 
-    public Long createRoomType(String name, String description, int size, int bed, int capacity, List<String> amenities);
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities);
 
     public RoomType viewRoomType(Long roomTypeId);
 
-    public void updateRoomType(Long roomTypeId, String name, String description, int size, int bed, int capacity, List<String> amenities);
+    public void updateRoomType(Long roomTypeId, String name, String description, int size, int bed, int capacity, String amenities);
 
     public void deleteRoomType(Long roomTypeId);
 
     public List<RoomType> viewAllRoomTypes();
+
+    public RoomType findRoomTypeById(Long roomTypeId);
+
+    public RoomType findRoomTypeByName(String roomTypeName);
     
 }

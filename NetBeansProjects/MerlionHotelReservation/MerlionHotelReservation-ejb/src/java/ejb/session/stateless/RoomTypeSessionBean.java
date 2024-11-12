@@ -9,6 +9,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
+import javax.persistence.Query;
 
 /**
  *
@@ -22,7 +23,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     
     
     @Override
-    public Long createRoomType(String name, String description, int size, int bed, int capacity, List<String> amenities) {
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities) {
         RoomType rt = new RoomType();
         rt.setName(name);
         rt.setDescription(description);
@@ -41,7 +42,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
 
     @Override
-    public void updateRoomType(Long roomTypeId, String name, String description, int size, int bed, int capacity, List<String> amenities) {
+    public void updateRoomType(Long roomTypeId, String name, String description, int size, int bed, int capacity, String amenities) {
         RoomType roomType = em.find(RoomType.class, roomTypeId);
         if (roomType != null) {
             roomType.setName(name);
@@ -65,5 +66,18 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     @Override
     public List<RoomType> viewAllRoomTypes() {
         return em.createQuery("SELECT r FROM RoomType r", RoomType.class).getResultList();
+    }
+    
+    @Override
+    public RoomType findRoomTypeById(Long roomTypeId) {
+        return em.find(RoomType.class, roomTypeId);
+    }
+    
+    @Override
+    public RoomType findRoomTypeByName(String roomTypeName) {
+        Query query = em.createQuery("SELECT rt from RoomType rt WHERE rt.name := inName");
+        query.setParameter(":inName", roomTypeName);
+        RoomType roomtype = (RoomType) query.getSingleResult();
+        return roomtype;
     }
 }
