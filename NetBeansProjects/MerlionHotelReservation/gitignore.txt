@@ -1,0 +1,38 @@
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.rar
+
+# User defined
+nbproject/private/
+build/
+dist/
+
+MerlionHotelReservation-ejb/nbproject/private/
+MerlionHotelReservation-ejb/build/
+MerlionHotelReservation-ejb/dist/
+
+MerlionHotelManagementClient/nbproject/private/
+MerlionHotelManagementClient/build/
+MerlionHotelManagementClient/dist/
+
+MerlionHotelReservationClient/nbproject/private/
+MerlionHotelReservationClient/build/
+MerlionHotelReservationClient/dist/
+
+MerlionHotelReservationLibrary/nbproject/private/
+MerlionHotelReservationLibrary/build/
+MerlionHotelReservationLibrary/dist/
+
+
+hs_err_pid*
+/HolidayReservationSystem/nbproject/private/
