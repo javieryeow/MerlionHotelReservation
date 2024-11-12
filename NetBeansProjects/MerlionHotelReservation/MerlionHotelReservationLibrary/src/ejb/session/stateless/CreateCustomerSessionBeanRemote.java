@@ -16,7 +16,7 @@ public interface CreateCustomerSessionBeanRemote {
 
     public Customer customerLogin(String email, String password);
     
-    public Customer createCustomer(String firstName, String lastName, String email, String phoneNumber, String password);
+    public Customer registerAsCustomer(String firstName, String lastName, String email, String phoneNumber, String password);
 
     
 }

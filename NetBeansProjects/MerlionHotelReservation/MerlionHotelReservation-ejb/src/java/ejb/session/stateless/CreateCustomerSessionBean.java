@@ -27,7 +27,7 @@ public class CreateCustomerSessionBean implements CreateCustomerSessionBeanRemot
     private EntityManager em;
 
     @Override
-     public Customer createCustomer(String firstName, String lastName, String email, String phoneNumber, String password) { // use case 2
+     public Customer registerAsCustomer(String firstName, String lastName, String email, String phoneNumber, String password) { // use case 2
         Customer customer = new Customer();
         customer.setFirstName(firstName);
         customer.setLastName(lastName);
