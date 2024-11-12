@@ -21,14 +21,12 @@ public class Main {
     private boolean isGuestLoggedIn = false;
     private Customer loggedInCustomer;
 
-    public Main(CreateCustomerSessionBeanRemote createCustomerSessionBean, CreateReservationSessionBeanRemote createReservationSessionBean) {
-        this.createCustomerSessionBean = createCustomerSessionBean;
-        this.createReservationSessionBean = createReservationSessionBean;
+    public Main() {
+       
     }
 
-    public static void main(String[] args) {
-        // Assuming beans are injected or retrieved via JNDI lookup
-        Main clientApp = new Main(null, null); // replace nulls with actual bean lookups
+   public static void main(String[] args) {
+        Main clientApp = new Main();
         clientApp.run();
     }
 
