@@ -108,4 +108,17 @@ public abstract class Employee implements Serializable {
         this.password = password;
     }
     
+    /**
+     * @return the status
+     */
+    public role getStatus() {
+        return status;
+    }
+
+    /**
+     * @param status the status to set
+     */
+    public void setStatus(role status) {
+        this.status = status;
+    }
 }

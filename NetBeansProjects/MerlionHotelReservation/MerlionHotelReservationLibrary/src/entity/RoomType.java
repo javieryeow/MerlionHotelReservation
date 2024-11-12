@@ -40,7 +40,7 @@ public class RoomType implements Serializable {
     private int capacity;
     
     @Column(nullable = false)
-    private List<String> amenities;
+    private String amenities;
     
     @OneToMany(mappedBy = "roomType")
     private List<Room> rooms;
@@ -51,12 +51,11 @@ public class RoomType implements Serializable {
     private boolean enabled = true;
 
     public RoomType() {
-        this.amenities = new ArrayList<String>();
         this.rooms = new ArrayList<Room>();
         this.roomRates = new ArrayList<RoomRate>();
     }
 
-    public RoomType(String name, String description, int size, int bed, int capacity, List<String> amenities) {
+    public RoomType(String name, String description, int size, int bed, int capacity, String amenities) {
         this();
         this.name = name;
         this.description = description;
@@ -172,14 +171,14 @@ public class RoomType implements Serializable {
     /**
      * @return the amenities
      */
-    public List<String> getAmenities() {
+    public String getAmenities() {
         return amenities;
     }
 
     /**
      * @param amenities the amenities to set
      */
-    public void setAmenities(List<String> amenities) {
+    public void setAmenities(String amenities) {
         this.amenities = amenities;
     }
 
