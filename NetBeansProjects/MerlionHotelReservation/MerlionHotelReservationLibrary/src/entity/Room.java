@@ -24,7 +24,7 @@ public class Room implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long roomId;
     
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 4)
     private String roomNumber;
     
     @ManyToOne(optional = false)
@@ -44,10 +44,10 @@ public class Room implements Serializable {
     public Room() {
     }
 
-    public Room(String roomNumber, RoomType roomType, RoomStatus status) {
+    public Room(String roomNumber, RoomType roomType) {
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        this.status = status;
+        this.status = RoomStatus.AVAILABLE;
     }
 
     public Long getRoomId() {

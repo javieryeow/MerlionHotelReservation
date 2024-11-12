@@ -7,7 +7,6 @@ package ejb.session.stateless;
 import entity.RoomRate;
 import entity.RoomRate.RateType;
 import entity.RoomType;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import javax.ejb.Stateless;
 import javax.persistence.*;
@@ -24,7 +23,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     private EntityManager em;
     
     @Override
-    public Long createRoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate) {
+    public Long createRoomRate(String name, RoomType roomType, RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate) {
         RoomRate roomRate = new RoomRate();
         roomRate.setName(name);
         roomRate.setRoomType(roomType);
@@ -47,7 +46,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     }
     
     @Override
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate) {
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RateType rateType, int ratePerNight, LocalDate startDate, LocalDate endDate) {
         RoomRate roomRate = em.find(RoomRate.class, roomRateId);
         if (roomRate != null && roomRate.isEnabled()) { // Only allow updates if enabled
             roomRate.setName(name);

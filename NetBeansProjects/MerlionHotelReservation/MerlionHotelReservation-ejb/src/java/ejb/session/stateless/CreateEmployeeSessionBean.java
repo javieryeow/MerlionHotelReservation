@@ -63,9 +63,4 @@ public class CreateEmployeeSessionBean implements CreateEmployeeSessionBeanRemot
         
         return query.getResultList();
     }
-    
-    
-    
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
 }

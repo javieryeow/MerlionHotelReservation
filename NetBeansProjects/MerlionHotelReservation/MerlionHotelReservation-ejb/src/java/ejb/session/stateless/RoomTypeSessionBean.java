@@ -22,10 +22,17 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     
     
     @Override
-    public Long createRoomType(RoomType roomType) {
-        em.persist(roomType);
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, List<String> amenities) {
+        RoomType rt = new RoomType();
+        rt.setName(name);
+        rt.setDescription(description);
+        rt.setSize(size);
+        rt.setBed(bed);
+        rt.setCapacity(capacity);
+        rt.setAmenities(amenities);
+        em.persist(rt);
         em.flush();
-        return roomType.getRoomTypeId();
+        return rt.getRoomTypeId();
     }
 
     @Override
@@ -34,8 +41,16 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
 
     @Override
-    public void updateRoomType(RoomType roomType) {
-        em.merge(roomType);
+    public void updateRoomType(Long roomTypeId, String name, String description, int size, int bed, int capacity, List<String> amenities) {
+        RoomType roomType = em.find(RoomType.class, roomTypeId);
+        if (roomType != null) {
+            roomType.setName(name);
+            roomType.setDescription(description);
+            roomType.setSize(size);
+            roomType.setBed(bed);
+            roomType.setCapacity(capacity);
+            roomType.setAmenities(amenities);
+        }
     }
     
     @Override

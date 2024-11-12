@@ -5,6 +5,7 @@
 package ejb.session.stateless;
 
 import entity.Room;
+import entity.RoomType;
 import java.util.List;
 import javax.ejb.Remote;
 
@@ -15,9 +16,9 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomSessionBeanRemote {
     
-    public Long createRoom(Room room);
+    public Long createRoom(String roomNumber, RoomType roomType);
 
-    public void updateRoom(Room room);
+    public void updateRoom(Long roomId, String roomNumber, RoomType roomType, Room.RoomStatus status);
 
     public void deleteRoom(Long roomId);
 
