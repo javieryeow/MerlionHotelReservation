@@ -8,6 +8,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List; 
 import javax.ejb.EJB;
+import util.exception.CustomerNotFoundException;
+import util.exception.RoomTypeNotFoundException;
+import util.exception.RoomTypeUnavailableException;
+import util.exception.WrongPasswordException;
 
 public class Main {
 

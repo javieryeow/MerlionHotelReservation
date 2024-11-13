@@ -17,73 +17,62 @@ import javax.persistence.OneToMany;
 
 /**
  *
- * @author wkgaret
+ * @author javieryeow
  */
 @Entity
-public class Customer implements Serializable {
-
+public class WalkInGuest implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long customerId;
-
+    private Long walkInGuestId;
+    
     @Column(nullable = false)
     private String firstName;
-
+    
     @Column(nullable = false)
     private String lastName;
-
-    @Column(nullable = false, unique = true)
-    private String email;
-
+    
     @Column(nullable = false, unique = true)
     private String phoneNumber;
     
-    @Column(nullable = false)
-    private String password;
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "walkInGuest", cascade = CascadeType.ALL)
     private List<Reservation> reservations;
 
-    public Customer() {
+    public WalkInGuest() {
         this.reservations = new ArrayList<Reservation>();
     }
 
-    public Customer(String firstName, String lastName, String email, String phoneNumber, String password) {
-        
+    public WalkInGuest(String firstName, String lastName, String phoneNumber) {
         this();
         this.firstName = firstName;
         this.lastName = lastName;
-        this.email = email;
         this.phoneNumber = phoneNumber;
-        this.password = password;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
     }
     
-       @Override
+    public Long getWalkInGuestId() {
+        return walkInGuestId;
+    }
+
+    public void setWalkInGuestId(Long walkInGuestId) {
+        this.walkInGuestId = walkInGuestId;
+    }
+
+    @Override
     public int hashCode() {
         int hash = 0;
-        hash += (customerId != null ? customerId.hashCode() : 0);
+        hash += (walkInGuestId != null ? walkInGuestId.hashCode() : 0);
         return hash;
     }
 
     @Override
     public boolean equals(Object object) {
-        // TODO: Warning - this method won't work in the case the id fields are not set
-        if (!(object instanceof Customer)) {
+        // TODO: Warning - this method won't work in the case the walkInGuestId fields are not set
+        if (!(object instanceof WalkInGuest)) {
             return false;
         }
-        Customer other = (Customer) object;
-        if ((this.customerId == null && other.customerId != null) || (this.customerId != null && !this.customerId.equals(other.customerId))) {
+        WalkInGuest other = (WalkInGuest) object;
+        if ((this.walkInGuestId == null && other.walkInGuestId != null) || (this.walkInGuestId != null && !this.walkInGuestId.equals(other.walkInGuestId))) {
             return false;
         }
         return true;
@@ -91,62 +80,63 @@ public class Customer implements Serializable {
 
     @Override
     public String toString() {
-        return "entity.Customer[ id=" + customerId + " ]";
+        return "entity.WalkInGuest[ id=" + walkInGuestId + " ]";
     }
 
+    /**
+     * @return the firstName
+     */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * @param firstName the firstName to set
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * @return the lastName
+     */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * @param lastName the lastName to set
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
+    /**
+     * @return the phoneNumber
+     */
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
+    /**
+     * @param phoneNumber the phoneNumber to set
+     */
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
-
+    /**
+     * @return the reservations
+     */
     public List<Reservation> getReservations() {
         return reservations;
     }
 
+    /**
+     * @param reservations the reservations to set
+     */
     public void setReservations(List<Reservation> reservations) {
         this.reservations = reservations;
     }
-
     
 }
-
-
- 
-    
-

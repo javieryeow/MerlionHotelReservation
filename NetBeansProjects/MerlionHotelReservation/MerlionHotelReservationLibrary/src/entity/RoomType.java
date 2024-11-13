@@ -42,6 +42,9 @@ public class RoomType implements Serializable {
     @Column(nullable = false)
     private String amenities;
     
+    @Column(nullable = false)
+    private int inventory;
+    
     @OneToMany(mappedBy = "roomType")
     private List<Room> rooms;
     
@@ -56,6 +59,7 @@ public class RoomType implements Serializable {
     public RoomType() {
         this.rooms = new ArrayList<Room>();
         this.roomRates = new ArrayList<RoomRate>();
+        this.inventory = 0;
     }
 
     public RoomType(String name, String description, int size, int bed, int capacity, String amenities) {
@@ -242,6 +246,20 @@ public class RoomType implements Serializable {
      */
     public void setHigherRoomType(RoomType HigherRoomType) {
         this.HigherRoomType = HigherRoomType;
+    }
+
+    /**
+     * @return the inventory
+     */
+    public int getInventory() {
+        return inventory;
+    }
+
+    /**
+     * @param inventory the inventory to set
+     */
+    public void setInventory(int inventory) {
+        this.inventory = inventory;
     }
     
 }
