@@ -17,6 +17,10 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
+import util.exception.InvalidStatusTransitionException;
+import util.exception.ReservationNotFoundException;
+import util.exception.RoomTypeNotFoundException;
+import util.exception.RoomTypeUnavailableException;
 
 @Stateless
 public class CreateReservationSessionBean implements CreateReservationSessionBeanRemote, CreateReservationSessionBeanLocal {
@@ -88,23 +92,26 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return applicableRate;
     }
 
-    @Override
-    public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception {
-        Reservation reservation = em.find(Reservation.class, reservationId);
+   public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) 
+        throws ReservationNotFoundException, InvalidStatusTransitionException {
+    
+    Reservation reservation = em.find(Reservation.class, reservationId);
 
-        if (reservation == null) {
-            throw new Exception("Reservation not found.");
-        }
-
-        Reservation.ReservationStatus currentStatus = reservation.getStatus();
-
-        if (!isValidStatusTransition(currentStatus, newStatus)) {
-            throw new Exception("Invalid status transition from " + currentStatus + " to " + newStatus);
-        }
-
-        reservation.setStatus(newStatus);
-        em.merge(reservation);
+    if (reservation == null) {
+        throw new ReservationNotFoundException("Reservation with ID " + reservationId + " not found.");
     }
+
+    Reservation.ReservationStatus currentStatus = reservation.getStatus();
+
+    if (!isValidStatusTransition(currentStatus, newStatus)) {
+        throw new InvalidStatusTransitionException(
+            "Invalid status transition from " + currentStatus + " to " + newStatus
+        );
+    }
+
+    reservation.setStatus(newStatus);
+    em.merge(reservation);
+}
 
     private boolean isValidStatusTransition(Reservation.ReservationStatus currentStatus, Reservation.ReservationStatus newStatus) {
         switch (currentStatus) {
@@ -141,29 +148,26 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception {
-        if (customer == null) {
-            throw new Exception("Customer not found.");
+  public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) 
+        throws RoomTypeNotFoundException, RoomTypeUnavailableException {
+    
+    BigDecimal totalCost = BigDecimal.ZERO;
+    List<RoomRate> applicableRates = new ArrayList<>();
+    RoomType selectedRoomType = null;
+
+    for (Long roomTypeId : roomTypeIds) {
+        RoomType roomType = em.find(RoomType.class, roomTypeId);
+        if (roomType == null) {
+            throw new RoomTypeNotFoundException("Room Type with ID " + roomTypeId + " not found.");
         }
 
-        BigDecimal totalCost = BigDecimal.ZERO;
-        List<RoomRate> applicableRates = new ArrayList<>();
-
-        RoomType selectedRoomType = null;
-
-        for (Long roomTypeId : roomTypeIds) {
-            RoomType roomType = em.find(RoomType.class, roomTypeId);
-            if (roomType == null) {
-                throw new Exception("Room Type with ID " + roomTypeId + " not found.");
-            }
-
-            if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
-                throw new Exception("Room Type " + roomType.getName() + " is not available for the selected dates.");
-            }
-
-            totalCost = totalCost.add(calculateTotalCost(roomType, checkInDate, checkOutDate));
-            selectedRoomType = roomType;
+        if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
+            throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " is not available for the selected dates.");
         }
+
+        totalCost = totalCost.add(calculateTotalCost(roomType, checkInDate, checkOutDate));
+        selectedRoomType = roomType;
+    }
 
         Reservation reservation = new Reservation();
         reservation.setCheckInDate(checkInDate);
