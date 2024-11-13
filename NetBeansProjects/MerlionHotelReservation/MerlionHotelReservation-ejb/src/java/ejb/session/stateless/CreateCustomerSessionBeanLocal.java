@@ -6,6 +6,8 @@ package ejb.session.stateless;
 
 import entity.Customer;
 import javax.ejb.Local;
+import util.exception.CustomerNotFoundException;
+import util.exception.WrongPasswordException;
 
 /**
  *
@@ -14,7 +16,7 @@ import javax.ejb.Local;
 @Local
 public interface CreateCustomerSessionBeanLocal {
     
-    public Customer customerLogin(String email, String password);
+    public Customer customerLogin(String email, String password) throws CustomerNotFoundException, WrongPasswordException;
 
     public Customer registerAsCustomer(String firstName, String lastName, String email, String phoneNumber, String password);
     

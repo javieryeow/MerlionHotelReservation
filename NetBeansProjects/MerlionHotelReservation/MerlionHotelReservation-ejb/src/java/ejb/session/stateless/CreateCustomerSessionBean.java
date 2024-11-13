@@ -5,16 +5,11 @@
 package ejb.session.stateless;
 
 import entity.Customer;
-import entity.CustomerReservation;
-import entity.CustomerReservation.ReservationStatus;
-import entity.ReservationDetails;
-import entity.RoomType;
-import java.time.LocalDate;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
-import java.util.List;
-import javax.persistence.NoResultException;
+import util.exception.CustomerNotFoundException;
+import util.exception.WrongPasswordException;
 
 /**
  *
@@ -41,24 +36,25 @@ public class CreateCustomerSessionBean implements CreateCustomerSessionBeanRemot
     }
      
     @Override
-        public Customer customerLogin(String email, String password) {
-        try {
-            Customer customer = (Customer) em.createQuery("SELECT c FROM Customer c WHERE c.email = :email")
-                                             .setParameter("email", email)
-                                             .getSingleResult();
-            // Verify password - ensure to store passwords securely in production
-            if (customer != null && customer.getPassword().equals(password)) {
-                return customer; // Login successful
-            }
-        } catch (NoResultException e) {
-            // No customer found with the provided email
-            System.out.println("Customer not found for email: " + email);
-        } catch (Exception e) {
-            // Handle any other errors
-            System.out.println("Error during login: " + e.getMessage());
-        }
-        return null; // Login failed
+       public Customer customerLogin(String email, String password) throws CustomerNotFoundException, WrongPasswordException {
+    // Retrieve the customer based on email
+    Customer customer = (Customer) em.createQuery("SELECT c FROM Customer c WHERE c.email = :email", Customer.class)
+                                     .setParameter("email", email)
+                                     .getSingleResult();
+    
+    // Check if the customer was found
+    if (customer == null) {
+        throw new CustomerNotFoundException("Customer not found for email: " + email);
     }
+    
+    // Verify password - ensure to store passwords securely in production
+    if (!customer.getPassword().equals(password)) {
+        throw new WrongPasswordException("Incorrect password for email: " + email);
+    }
+    
+    return customer; // Login successful
+}
+
      
       
 

@@ -14,6 +14,8 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.RoomTypeNotFoundException;
+import util.exception.RoomTypeUnavailableException;
 
 /**
  *
@@ -31,7 +33,8 @@ public interface CreateReservationSessionBeanRemote {
     public Reservation viewCustomerReservation(Long customerId, Long reservationId);
 
     // Reserve a hotel room with a list of room type IDs and date range
-    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) throws Exception;
+
+    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws RoomTypeNotFoundException, RoomTypeUnavailableException;
 
     // View all reservations of a specific customer
     public List<Reservation> viewAllReservations(Long customerId);
