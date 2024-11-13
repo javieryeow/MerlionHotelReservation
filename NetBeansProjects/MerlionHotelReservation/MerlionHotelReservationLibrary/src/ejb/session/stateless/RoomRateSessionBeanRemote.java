@@ -8,6 +8,7 @@ import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
 
@@ -18,13 +19,15 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomRateSessionBeanRemote {
     
-    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate);
+    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate);
     
     public RoomRate viewRoomRateDetails(Long roomRateId);
 
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate);
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate);
 
     public void deleteRoomRate(Long roomRateId);
 
     public List<RoomRate> viewAllRoomRates();
+    
+    public RoomRate findRoomRateById(Long roomRateId);
 }

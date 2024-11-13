@@ -18,6 +18,10 @@ import javax.ejb.EJB;
 import java.util.*;
 import entity.*;
 import entity.Room.RoomStatus;
+import entity.RoomRate.RateType;
+import java.math.BigDecimal;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 
 /**
  *
@@ -329,12 +333,92 @@ public class Main {
     
     private static void createNewRoomRate() {
         
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+        System.out.print("Enter Room Rate Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter New Room Type Name: ");
+        String roomTypeName = sc.nextLine();
+        System.out.println("Select Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4, PROMOTION): ");
+        int choice = sc.nextInt();
+        RateType type = RateType.PUBLISHED;
+        if (choice == 1) {
+            type = RateType.PUBLISHED;
+        } else if(choice == 2) {
+            type = RateType.NORMAL;
+        } else if (choice == 3) {
+            type = RateType.PEAK;
+        } else if (choice == 4) {
+            type = RateType.PROMOTION;
+        }
+        System.out.print("Enter Rate Per Night: ");
+        BigDecimal ratePerNight = sc.nextBigDecimal();
+        sc.nextLine();
+        Date start = null;
+        Date end = null;
+        if (choice == 3 || choice == 4) {
+            System.out.print("Enter your Start Date (dd/mm/yy): ");
+            start = inputDateFormat.parse(sc.nextLine().trim());
+            System.out.print("Enter your End Date (dd/mm/yy): ");
+            end = inputDateFormat.parse(sc.nextLine().trim());
+        }
+        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+        Long roomRateId = roomRateSessionBean.createRoomRate(name, roomtype, type, ratePerNight, start, end);
+        System.out.println("Room Rate Successfully Created! Room Rate ID: " + roomRateId);
+    }
+    
+    private static void viewRoomRateDetails() {
+        System.out.print("Enter Room Rate ID: ");
+        Long roomRateId = sc.nextLong();
+        RoomRate roomRate = roomRateSessionBean.findRoomRateById(roomRateId);
+        RateType type = roomRate.getRateType();
+        if (type.equals(RateType.PEAK) || type.equals(RateType.PROMOTION)) {
+            System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
+            System.out.printf("%s%s%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+        } else {
+            System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night");
+            System.out.printf("%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+        }
+    }
+    
+    private static void updateRoomRate() {
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+        System.out.print("Enter Room Rate ID: ");
+        Long roomRateId = sc.nextLong();
+        sc.nextLine();
+        System.out.print("Enter New Room Rate Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter new Room Type Name: ");
+        String roomTypeName = sc.nextLine();
+        System.out.println("Select New Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4, PROMOTION): ");
+        int choice = sc.nextInt();
+        RateType type = RateType.PUBLISHED;
+        if (choice == 1) {
+            type = RateType.PUBLISHED;
+        } else if(choice == 2) {
+            type = RateType.NORMAL;
+        } else if (choice == 3) {
+            type = RateType.PEAK;
+        } else if (choice == 4) {
+            type = RateType.PROMOTION;
+        }
+        sc.nextLine();
+        System.out.print("Enter new Rate Per Night: ");
+        BigDecimal ratePerNight = sc.nextBigDecimal();
+        sc.nextLine();
+        Date start = null;
+        Date end = null;
+        if (choice == 3 || choice == 4) {
+            System.out.print("Enter your Start Date (dd/mm/yy): ");
+            start = inputDateFormat.parse(sc.nextLine().trim());
+            System.out.print("Enter your End Date (dd/mm/yy): ");
+            end = inputDateFormat.parse(sc.nextLine().trim());
+        }
+        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+        roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
+        System.out.println("Room Rate Successfully updated!");
     }
     
     
     
-    
-    
-    
-    
+      
 }

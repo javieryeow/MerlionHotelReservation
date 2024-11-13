@@ -24,7 +24,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     private EntityManager em;
     
     @Override
-    public Long createRoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate) {
+    public Long createRoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
         RoomRate roomRate = new RoomRate();
         roomRate.setName(name);
         roomRate.setRoomType(roomType);
@@ -47,7 +47,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     }
     
     @Override
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate) {
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
         RoomRate roomRate = em.find(RoomRate.class, roomRateId);
         if (roomRate != null && roomRate.isEnabled()) { // Only allow updates if enabled
             roomRate.setName(name);
@@ -88,6 +88,11 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     @Override
     public List<RoomRate> viewAllRoomRates() {
         return em.createQuery("SELECT r FROM RoomRate r", RoomRate.class).getResultList();
+    }
+    
+    @Override
+    public RoomRate findRoomRateById(Long roomRateId) {
+        return em.find(RoomRate.class, roomRateId);
     }
     
 }

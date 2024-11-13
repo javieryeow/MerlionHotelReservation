@@ -41,9 +41,13 @@ public class RoomRate implements Serializable {
     @Column(nullable = false)
     private BigDecimal ratePerNight;
     
-    private LocalDate startDate; // Only for PEAK and PROMOTION
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date startDate; // Only for PEAK and PROMOTION
     
-    private LocalDate endDate;   // Only for PEAK and PROMOTION
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(nullable = true)
+    private Date endDate;   // Only for PEAK and PROMOTION
     
     @Column(nullable = false)
     private boolean enabled = true;
@@ -55,7 +59,7 @@ public class RoomRate implements Serializable {
     public RoomRate() {
     }
 
-    public RoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, LocalDate startDate, LocalDate endDate) {
+    public RoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
         this.name = name;
         this.roomType = roomType;
         this.rateType = rateType;
@@ -157,14 +161,14 @@ public class RoomRate implements Serializable {
     /**
      * @return the startDate
      */
-    public LocalDate getStartDate() {
+    public Date getStartDate() {
         return startDate;
     }
 
     /**
      * @param startDate the startDate to set
      */
-    public void setStartDate(LocalDate startDate) {
+    public void setStartDate(Date startDate) {
         this.startDate = startDate;
     }
 
@@ -187,14 +191,14 @@ public class RoomRate implements Serializable {
     /**
      * @return the endDate
      */
-    public LocalDate getEndDate() {
+    public Date getEndDate() {
         return endDate;
     }
 
     /**
      * @param endDate the endDate to set
      */
-    public void setEndDate(LocalDate endDate) {
+    public void setEndDate(Date endDate) {
         this.endDate = endDate;
     }
     
