@@ -6,6 +6,7 @@ package ejb.session.stateless;
 
 import entity.Reservation;
 import entity.RoomAllocationException;
+import entity.RoomAllocationException.RoomAllocationExceptionType;
 import entity.RoomType;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,50 +25,20 @@ public class CreateRoomAllocationExceptionSessionBean implements CreateRoomAlloc
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
     
-    public Long createRoomAllocationException() {
-        List<RoomAllocationException> exceptions = new ArrayList<>();
-
-        List<Reservation> reservations = getReservationsForDate(reportDate);
-
-        for (Reservation reservation : reservations) {
-            RoomType reservedRoomType = reservation.getRoomType();
-            RoomType nextHigherRoomType = findNextHigherRoomType(reservedRoomType);
-
-            if (!isRoomAvailable(reservedRoomType, reportDate)) {
-                if (nextHigherRoomType != null && isRoomAvailable(nextHigherRoomType, reportDate)) {
-                    // Exception Type 1: Auto-upgrade to next room type
-                    allocateRoomToReservation(reservation, nextHigherRoomType);
-                    exceptions.add(new RoomAllocationException(reservation, "Auto-upgraded to higher room type"));
-                } else {
-                    // Exception Type 2: No rooms available in reserved or higher type
-                    exceptions.add(new RoomAllocationException(reservation, "No room available"));
-                }
-            }
-        }
-
-        return exceptions;
+    @Override
+    public Long createRoomAllocationException(RoomAllocationExceptionType type, String issue, Reservation reservation) {
+        RoomAllocationException roomAllocationException = new RoomAllocationException();
+        roomAllocationException.setType(type);
+        roomAllocationException.setIssue(issue);
+        roomAllocationException.setReservation(reservation);
+        em.persist(roomAllocationException);
+        em.flush();
+        return roomAllocationException.getRoomAllocationExceptionId();
     }
-
-    private List<Reservation> getReservationsForDate(Date date) {
-        // Query to fetch reservations for the specified date
-    }
-
-    private boolean isRoomAvailable(RoomType roomType, Date date) {
-        // Logic to check room availability in specified room type
-    }
-
-    private RoomType findNextHigherRoomType(RoomType roomType) {
-        // Logic to find the next higher room type
-    }
-
-    private void allocateRoomToReservation(Reservation reservation, RoomType roomType) {
-        // Logic to allocate a room from the specified room type to the reservation
-    }
-}
-
-    public void persist(Object object) {
-        em.persist(object);
-    }
-
-   
+    
+    
+    @Override
+    public List<RoomAllocationException> viewAllRoomAllocationException() {
+        return em.createQuery("SELECT r FROM RoomAllocationException r", RoomAllocationException.class).getResultList();
+    } 
 }

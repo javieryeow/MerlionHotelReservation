@@ -43,9 +43,10 @@ public class RoomAllocationException implements Serializable {
     public RoomAllocationException() {
     }
 
-    public RoomAllocationException(RoomAllocationExceptionType type, String issue) {
+    public RoomAllocationException(RoomAllocationExceptionType type, String issue, Reservation reservation) {
         this.type = type;
         this.issue = issue;
+        this.reservation = reservation;
     }
     
     
