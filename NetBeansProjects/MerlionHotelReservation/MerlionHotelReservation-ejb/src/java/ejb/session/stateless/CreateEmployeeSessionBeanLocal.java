@@ -24,5 +24,7 @@ public interface CreateEmployeeSessionBeanLocal {
     public Long createSystemAdmin(String username, String password);
 
     public List<Employee> viewAllEmployees();
+
+    public Employee findEmployeeById(Long employeeId);
     
 }

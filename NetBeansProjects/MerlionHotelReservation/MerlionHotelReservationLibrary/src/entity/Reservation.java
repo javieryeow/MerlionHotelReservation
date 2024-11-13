@@ -10,6 +10,7 @@ import java.util.List;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 
 @Entity
 public class Reservation implements Serializable {
@@ -21,18 +22,18 @@ public class Reservation implements Serializable {
     private Long reservationId;
 
     @Column(nullable = false)
-    private LocalDate checkInDate;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date checkInDate;
 
     @Column(nullable = false)
-    private LocalDate checkOutDate;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "customerId", nullable = false)
-    private Customer customer;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "roomTypeId", nullable = false)
-    private RoomType roomType;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date checkOutDate;
+    
+    @Column(nullable = false)
+    private BigDecimal totalCost;
+    
+    @Column(nullable = false)
+    private int numberOfRooms;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -41,9 +42,24 @@ public class Reservation implements Serializable {
     @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "reservationId")
     private List<RoomRate> roomRates;
+    
+    @ManyToMany
+    private List<Room> rooms;
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "customerId", nullable = false)
+    private Customer customer;
 
-    @Column(nullable = false)
-    private BigDecimal totalCost;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "roomTypeId", nullable = false)
+    private RoomType roomType;
+    
+    @ManyToOne(optional = true)
+    @JoinColumn(nullable = true)
+    private Partner partner;
+    
+    @OneToOne(optional = true)
+    private RoomAllocationException roomAllocationException;
 
     public enum ReservationStatus {
         PENDING, CONFIRMED, CANCELLED, CHECKED_IN, CHECKED_OUT
@@ -51,9 +67,10 @@ public class Reservation implements Serializable {
 
     public Reservation() {
         this.roomRates = new ArrayList<RoomRate>();
+        this.rooms = new ArrayList<Room>();
     }
 
-    public Reservation(LocalDate checkInDate, LocalDate checkOutDate, Customer customer, RoomType roomType, ReservationStatus status, List<RoomRate> roomRates, BigDecimal totalCost) {
+    public Reservation(Date checkInDate, Date checkOutDate, Customer customer, RoomType roomType, ReservationStatus status, List<RoomRate> roomRates, BigDecimal totalCost) {
         this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
@@ -74,19 +91,19 @@ public class Reservation implements Serializable {
         this.reservationId = reservationId;
     }
 
-    public LocalDate getCheckInDate() {
+    public Date getCheckInDate() {
         return checkInDate;
     }
 
-    public void setCheckInDate(LocalDate checkInDate) {
+    public void setCheckInDate(Date checkInDate) {
         this.checkInDate = checkInDate;
     }
 
-    public LocalDate getCheckOutDate() {
+    public Date getCheckOutDate() {
         return checkOutDate;
     }
 
-    public void setCheckOutDate(LocalDate checkOutDate) {
+    public void setCheckOutDate(Date checkOutDate) {
         this.checkOutDate = checkOutDate;
     }
 
@@ -152,6 +169,62 @@ public class Reservation implements Serializable {
     @Override
     public String toString() {
         return "entity.Reservation[ id=" + reservationId + " ]";
+    }
+
+    /**
+     * @return the rooms
+     */
+    public List<Room> getRooms() {
+        return rooms;
+    }
+
+    /**
+     * @param rooms the rooms to set
+     */
+    public void setRooms(List<Room> rooms) {
+        this.rooms = rooms;
+    }
+
+    /**
+     * @return the partner
+     */
+    public Partner getPartner() {
+        return partner;
+    }
+
+    /**
+     * @param partner the partner to set
+     */
+    public void setPartner(Partner partner) {
+        this.partner = partner;
+    }
+
+    /**
+     * @return the roomAllocationException
+     */
+    public RoomAllocationException getRoomAllocationException() {
+        return roomAllocationException;
+    }
+
+    /**
+     * @param roomAllocationException the roomAllocationException to set
+     */
+    public void setRoomAllocationException(RoomAllocationException roomAllocationException) {
+        this.roomAllocationException = roomAllocationException;
+    }
+
+    /**
+     * @return the numberOfRooms
+     */
+    public int getNumberOfRooms() {
+        return numberOfRooms;
+    }
+
+    /**
+     * @param numberOfRooms the numberOfRooms to set
+     */
+    public void setNumberOfRooms(int numberOfRooms) {
+        this.numberOfRooms = numberOfRooms;
     }
 }
 
