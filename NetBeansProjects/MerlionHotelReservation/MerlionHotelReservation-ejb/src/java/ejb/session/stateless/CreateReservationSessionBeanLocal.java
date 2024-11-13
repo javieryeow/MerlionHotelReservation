@@ -8,16 +8,20 @@ import entity.Customer;
 import entity.Reservation;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.RoomTypeNotFoundException;
+import util.exception.RoomTypeUnavailableException;
 
+/**
+ *
+ * @author wkgaret
+ */
 @Local
 public interface CreateReservationSessionBeanLocal {
-
-    // Search for available rooms within a date range
-    public List<RoomType> searchAvailableRooms(Date checkInDate, Date checkOutDate);
+    
+     public List<RoomType> searchAvailableRooms(Date checkInDate, Date checkOutDate);
 
     // Calculate total cost based on room type and date range
     public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate);
@@ -26,11 +30,15 @@ public interface CreateReservationSessionBeanLocal {
     public Reservation viewCustomerReservation(Long customerId, Long reservationId);
 
     // Reserve a hotel room with a list of room type IDs and date range
-    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) throws Exception;
+
+   public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
+        throws RoomTypeNotFoundException, RoomTypeUnavailableException;
 
     // View all reservations of a specific customer
     public List<Reservation> viewAllReservations(Long customerId);
 
     // Update the reservation status
     public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception;
+
+ 
 }

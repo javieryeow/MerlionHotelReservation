@@ -7,6 +7,7 @@ package ejb.session.stateless;
 import entity.Employee;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.EmployeeAlreadyExistsException;
 
 /**
  *
@@ -15,13 +16,13 @@ import javax.ejb.Remote;
 @Remote
 public interface CreateEmployeeSessionBeanRemote {
     
-    public Long createOperationManager(String username, String password);
+    public Long createOperationManager(String username, String password) throws EmployeeAlreadyExistsException;
     
-    public Long createSalesManager(String username, String password);
+    public Long createSalesManager(String username, String password) throws EmployeeAlreadyExistsException;
     
-    public Long createGRO(String username, String password);
+    public Long createGRO(String username, String password) throws EmployeeAlreadyExistsException;
     
-    public Long createSystemAdmin(String username, String password);
+    public Long createSystemAdmin(String username, String password) throws EmployeeAlreadyExistsException;
     
     public List<Employee> viewAllEmployees();
     

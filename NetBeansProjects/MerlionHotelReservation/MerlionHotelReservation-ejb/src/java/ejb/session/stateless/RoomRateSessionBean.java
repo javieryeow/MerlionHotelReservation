@@ -8,10 +8,10 @@ import entity.RoomRate;
 import entity.RoomRate.RateType;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import javax.ejb.Stateless;
 import javax.persistence.*;
 import java.util.*;
+import util.exception.RoomRateNotFoundException;
 
 /**
  *
@@ -90,9 +90,13 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         return em.createQuery("SELECT r FROM RoomRate r", RoomRate.class).getResultList();
     }
     
-    @Override
-    public RoomRate findRoomRateById(Long roomRateId) {
-        return em.find(RoomRate.class, roomRateId);
+     @Override
+    public RoomRate findRoomRateById(Long roomRateId) throws RoomRateNotFoundException {
+        RoomRate roomRate = em.find(RoomRate.class, roomRateId);
+        if (roomRate == null) {
+            throw new RoomRateNotFoundException("Room Rate with ID " + roomRateId + " not found.");
+        }
+        return roomRate;
     }
     
 }

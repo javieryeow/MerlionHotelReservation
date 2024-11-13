@@ -8,7 +8,6 @@ import entity.Customer;
 import entity.Reservation;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
@@ -32,12 +31,13 @@ public interface CreateReservationSessionBeanRemote {
 
     // Reserve a hotel room with a list of room type IDs and date range
 
-    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws RoomTypeNotFoundException, RoomTypeUnavailableException;
+   public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
+        throws RoomTypeNotFoundException, RoomTypeUnavailableException;
 
     // View all reservations of a specific customer
     public List<Reservation> viewAllReservations(Long customerId);
 
-    // Update the reservation status
+    // i think dont need
     public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception;
 
  
