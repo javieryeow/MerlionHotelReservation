@@ -35,6 +35,9 @@ public class Room implements Serializable {
     @Column(nullable = false)
     private RoomStatus status;
     
+    @ManyToMany(mappedBy = "rooms")
+    private List<Reservation> reservations;
+    
     public enum RoomStatus {
     AVAILABLE, NOT_AVAILABLE;
     }
@@ -42,9 +45,11 @@ public class Room implements Serializable {
     private boolean enabled = true;
 
     public Room() {
+        this.reservations = new ArrayList<Reservation>();
     }
 
     public Room(String roomNumber, RoomType roomType) {
+        this();
         this.roomNumber = roomNumber;
         this.roomType = roomType;
         this.status = RoomStatus.AVAILABLE;

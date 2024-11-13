@@ -64,7 +64,7 @@ public class Main {
         
         Employee employee = employeeLogin.login(username, password);
         if (employee != null) {
-            System.out.println("Login successful! Welcome, " + employee.getEmployeeId() + ".");
+            System.out.println("Login successful! Welcome, Employee " + employee.getEmployeeId() + ".");
             if (employee.getStatus() == role.OPERATION_MANAGER) {
                 operationManagerMenu();
             } else if (employee.getStatus() == role.GUEST_RELATIONS_OFFICER) {
@@ -209,6 +209,8 @@ public class Main {
         }
     }
     
+    // OPERATION MANAGER METHODS
+    
     private static void createNewRoomType() {
         System.out.print("Enter Room Type Name: ");
         String name = sc.nextLine();
@@ -331,6 +333,8 @@ public class Main {
         
     }
     
+    // SALES MANAGER METHODS
+    
     private static void createNewRoomRate() {
         
         SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
@@ -416,6 +420,71 @@ public class Main {
         RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
         roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
         System.out.println("Room Rate Successfully updated!");
+    }
+    
+    private static void deleteRoomRate() {
+        System.out.print("Enter Room Rate ID: ");
+        Long roomRateId = sc.nextLong();
+        roomRateSessionBean.deleteRoomRate(roomRateId);
+        System.out.println("Room Rate Successfully Deleted!");
+    }
+    
+    private static void viewAllRoomRates() {
+        List<RoomRate> list = roomRateSessionBean.viewAllRoomRates();
+        System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
+        for (RoomRate roomRate: list) { 
+            System.out.printf("%10s%40s%20s%20s%20s%20s\n",roomRate.getRoomRateId(),roomRate.getName(), roomRate.getRateType(), 
+                    roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+        }
+    }
+    
+    // SYSTEM ADMIN METHODS
+    
+    private static void createNewEmployee() {
+        System.out.print("Enter New Employee Username: ");
+        String username = sc.nextLine();
+        System.out.print("Enter New Employee Password: ");
+        String password = sc.nextLine();
+        System.out.print("Select New Employee Role (1: OPERATION MANAGER, 2: SALES MANAGER, 3: GUEST RELATION OFFICER, 4: SYSTEM ADMINISTRATOR): ");
+        int choice = sc.nextInt();
+        sc.nextLine();
+        Long employeeId;
+        if (choice == 1) {
+            employeeId = createEmployeeSessionBean.createOperationManager(username, password);
+        } else if (choice == 2) {
+            employeeId = createEmployeeSessionBean.createSalesManager(username, password);
+        } else if (choice == 3) {
+            employeeId = createEmployeeSessionBean.createGRO(username, password);
+        } else {
+            employeeId = createEmployeeSessionBean.createSystemAdmin(username, password);
+        }
+        Employee employee = createEmployeeSessionBean.findEmployeeById(employeeId);
+        System.out.println("Employee Successfully Created! Employee ID: " + employeeId + " Employee Role: " + employee.getStatus());  
+    }
+    
+    private static void viewAllEmployees() {
+        List<Employee> list = createEmployeeSessionBean.viewAllEmployees();
+        System.out.printf("EmployeeID", "Username", "Password", "Role");
+        for (Employee e: list) {
+            System.out.printf("%s%s%s%s\n", e.getEmployeeId(), e.getUsername(), e.getPassword(), e.getStatus());
+        }
+    }
+    
+    private static void createNewPartner() {
+        System.out.print("Enter New Partner Username: ");
+        String username = sc.nextLine();
+        System.out.print("Enter New Partner Password: ");
+        String password = sc.nextLine();
+        Long partnerId = createPartnerSessionBean.createPartner(username, password);
+        System.out.println("New Partner Successfully Created! Partner ID: " + partnerId);
+    }
+    
+    private static void viewAllPartners() {
+        List<Partner> list = createPartnerSessionBean.viewAllPartners();
+        System.out.printf("PartnerID", "Username", "Password");
+        for (Partner p: list) {
+            System.out.printf("%s%s%s\n", p.getPartnerId(), p.getUsername(), p.getPassword());
+        }
     }
     
     

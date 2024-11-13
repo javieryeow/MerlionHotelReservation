@@ -63,4 +63,9 @@ public class CreateEmployeeSessionBean implements CreateEmployeeSessionBeanRemot
         
         return query.getResultList();
     }
+    
+    @Override
+    public Employee findEmployeeById(Long employeeId) {
+        return em.find(Employee.class, employeeId);
+    }
 }
