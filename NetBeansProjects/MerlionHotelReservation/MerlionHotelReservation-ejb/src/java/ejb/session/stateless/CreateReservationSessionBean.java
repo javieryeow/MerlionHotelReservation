@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -25,7 +26,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     private EntityManager em;
 
     @Override
-    public List<RoomType> searchAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate) {
+    public List<RoomType> searchAvailableRooms(Date checkInDate, Date checkOutDate) {
         List<RoomType> availableRoomTypes = new ArrayList<>();
 
         List<RoomType> allRoomTypes = em.createQuery("SELECT rt FROM RoomType rt", RoomType.class).getResultList();
@@ -39,7 +40,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return availableRoomTypes;
     }
 
-    private boolean isRoomTypeAvailable(RoomType roomType, LocalDate checkInDate, LocalDate checkOutDate) {
+    private boolean isRoomTypeAvailable(RoomType roomType, Date checkInDate, Date checkOutDate) {
         Query query = em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.roomType = :roomType AND r.checkInDate <= :checkOutDate AND r.checkOutDate >= :checkInDate");
         query.setParameter("roomType", roomType);
         query.setParameter("checkInDate", checkInDate);
@@ -52,9 +53,9 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public BigDecimal calculateTotalCost(RoomType roomType, LocalDate checkInDate, LocalDate checkOutDate) {
+    public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate) {
         BigDecimal totalCost = BigDecimal.ZERO;
-        LocalDate currentDate = checkInDate;
+        Date currentDate = checkInDate;
 
         while (!currentDate.isAfter(checkOutDate.minusDays(1))) {
             BigDecimal nightlyRate = getApplicableRate(roomType, currentDate);
@@ -141,7 +142,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) throws Exception {
+    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) throws Exception {
         if (customer == null) {
             throw new Exception("Customer not found.");
         }

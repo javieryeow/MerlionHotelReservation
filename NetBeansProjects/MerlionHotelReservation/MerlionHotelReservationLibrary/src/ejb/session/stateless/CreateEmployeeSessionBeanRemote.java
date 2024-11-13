@@ -25,4 +25,6 @@ public interface CreateEmployeeSessionBeanRemote {
     
     public List<Employee> viewAllEmployees();
     
+    public Employee findEmployeeById(Long employeeId);
+    
 }

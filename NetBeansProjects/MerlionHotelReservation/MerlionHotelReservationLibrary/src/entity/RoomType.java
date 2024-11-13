@@ -47,6 +47,9 @@ public class RoomType implements Serializable {
     
     @OneToMany(mappedBy = "roomType")
     private List<RoomRate> roomRates;
+    
+    @OneToOne
+    private RoomType HigherRoomType;
 
     private boolean enabled = true;
 
@@ -211,6 +214,34 @@ public class RoomType implements Serializable {
      */
     public void setRooms(List<Room> rooms) {
         this.rooms = rooms;
+    }
+
+    /**
+     * @return the roomRates
+     */
+    public List<RoomRate> getRoomRates() {
+        return roomRates;
+    }
+
+    /**
+     * @param roomRates the roomRates to set
+     */
+    public void setRoomRates(List<RoomRate> roomRates) {
+        this.roomRates = roomRates;
+    }
+
+    /**
+     * @return the HigherRoomType
+     */
+    public RoomType getHigherRoomType() {
+        return HigherRoomType;
+    }
+
+    /**
+     * @param HigherRoomType the HigherRoomType to set
+     */
+    public void setHigherRoomType(RoomType HigherRoomType) {
+        this.HigherRoomType = HigherRoomType;
     }
     
 }
