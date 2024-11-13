@@ -46,9 +46,13 @@ public class Reservation implements Serializable {
     @ManyToMany
     private List<Room> rooms;
     
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "customerId", nullable = false)
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "customerId", nullable = true)
     private Customer customer;
+    
+    @ManyToOne(optional = true)
+    @JoinColumn(nullable = true)
+    private WalkInGuest walkInGuest;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "roomTypeId", nullable = false)
@@ -70,11 +74,10 @@ public class Reservation implements Serializable {
         this.rooms = new ArrayList<Room>();
     }
 
-    public Reservation(Date checkInDate, Date checkOutDate, Customer customer, RoomType roomType, int numberOfRooms, ReservationStatus status, BigDecimal totalCost) {
+    public Reservation(Date checkInDate, Date checkOutDate, RoomType roomType, int numberOfRooms, ReservationStatus status, BigDecimal totalCost) {
         this();
         this.checkInDate = checkInDate;
         this.checkOutDate = checkOutDate;
-        this.customer = customer;
         this.roomType = roomType;
         this.numberOfRooms = numberOfRooms;
         this.status = status;
@@ -225,6 +228,20 @@ public class Reservation implements Serializable {
      */
     public void setNumberOfRooms(int numberOfRooms) {
         this.numberOfRooms = numberOfRooms;
+    }
+
+    /**
+     * @return the walkInGuest
+     */
+    public WalkInGuest getWalkInGuest() {
+        return walkInGuest;
+    }
+
+    /**
+     * @param walkInGuest the walkInGuest to set
+     */
+    public void setWalkInGuest(WalkInGuest walkInGuest) {
+        this.walkInGuest = walkInGuest;
     }
 }
 
