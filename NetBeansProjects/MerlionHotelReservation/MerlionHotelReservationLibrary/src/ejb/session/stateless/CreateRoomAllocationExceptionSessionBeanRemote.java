@@ -4,6 +4,9 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
+import entity.RoomAllocationException;
+import java.util.List;
 import javax.ejb.Remote;
 
 /**
@@ -12,5 +15,7 @@ import javax.ejb.Remote;
  */
 @Remote
 public interface CreateRoomAllocationExceptionSessionBeanRemote {
+    public Long createRoomAllocationException(RoomAllocationException.RoomAllocationExceptionType type, String issue, Reservation reservation);
     
+    public List<RoomAllocationException> viewAllRoomAllocationException();
 }

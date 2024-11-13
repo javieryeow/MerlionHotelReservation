@@ -140,6 +140,20 @@ public class Room implements Serializable {
     public void setDisabled() {
         this.enabled = false;
     }
+
+    /**
+     * @return the reservations
+     */
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    /**
+     * @param reservations the reservations to set
+     */
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
     
     
 }

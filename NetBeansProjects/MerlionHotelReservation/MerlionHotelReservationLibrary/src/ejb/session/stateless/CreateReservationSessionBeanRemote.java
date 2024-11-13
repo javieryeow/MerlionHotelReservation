@@ -5,9 +5,7 @@
 package ejb.session.stateless;
 
 import entity.Customer;
-import entity.CustomerReservation;
 import entity.Reservation;
-import entity.ReservationDetails;
 import entity.RoomType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
