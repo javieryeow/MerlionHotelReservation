@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.RoomRateNotFoundException;
 
 /**
  *
@@ -29,5 +30,5 @@ public interface RoomRateSessionBeanRemote {
 
     public List<RoomRate> viewAllRoomRates();
     
-    public RoomRate findRoomRateById(Long roomRateId);
+    public RoomRate findRoomRateById(Long roomRateId) throws RoomRateNotFoundException;
 }

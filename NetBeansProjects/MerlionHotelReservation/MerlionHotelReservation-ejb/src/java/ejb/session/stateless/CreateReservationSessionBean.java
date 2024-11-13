@@ -9,10 +9,9 @@ import entity.Reservation;
 import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Calendar;
 import java.util.List;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -57,20 +56,27 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate) {
-        BigDecimal totalCost = BigDecimal.ZERO;
-        Date currentDate = checkInDate;
+   public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate) {
+    BigDecimal totalCost = BigDecimal.ZERO;
 
-        while (!currentDate.isAfter(checkOutDate.minusDays(1))) {
-            BigDecimal nightlyRate = getApplicableRate(roomType, currentDate);
-            totalCost = totalCost.add(nightlyRate);
-            currentDate = currentDate.plusDays(1);
-        }
+    // Use Calendar for date manipulation
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(checkInDate);
 
-        return totalCost;
+    // Loop through each night from check-in to the day before check-out
+    while (calendar.getTime().before(checkOutDate)) {
+        Date currentDate = calendar.getTime();
+        BigDecimal nightlyRate = getApplicableRate(roomType, currentDate);
+        totalCost = totalCost.add(nightlyRate);
+
+        // Move to the next day
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
     }
 
-    private BigDecimal getApplicableRate(RoomType roomType, LocalDate date) {
+    return totalCost;
+}
+
+    private BigDecimal getApplicableRate(RoomType roomType, Date date) {
         List<RoomRate> rates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
                                   .setParameter("roomType", roomType)
                                   .setParameter("date", date)
@@ -149,7 +155,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-  public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, LocalDate checkInDate, LocalDate checkOutDate) 
+  public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
         throws RoomTypeNotFoundException, RoomTypeUnavailableException {
     
     BigDecimal totalCost = BigDecimal.ZERO;
@@ -180,19 +186,19 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
 
         em.persist(reservation);
         em.flush();
+        Calendar currentCalendar = Calendar.getInstance();
+         Calendar checkInCalendar = Calendar.getInstance();
+            checkInCalendar.setTime(checkInDate);
 
-        if (customer.getReservations() == null) {
-            customer.setReservations(new ArrayList<>());
-        }
-        customer.getReservations().add(reservation);
-        em.merge(customer);
+        boolean isToday = currentCalendar.get(Calendar.YEAR) == checkInCalendar.get(Calendar.YEAR) &&
+                      currentCalendar.get(Calendar.DAY_OF_YEAR) == checkInCalendar.get(Calendar.DAY_OF_YEAR);
 
-        if (checkInDate.equals(LocalDate.now()) && LocalTime.now().isAfter(LocalTime.of(2, 0))) {
-            allocateRoomsImmediately(reservation);
-        }
-
-        return reservation;
+        if (isToday && currentCalendar.get(Calendar.HOUR_OF_DAY) >= 14) { // 2:00 PM is 14:00 in 24-hour format
+        allocateRoomsImmediately(reservation);
     }
+
+    return reservation;
+}
 
     private void allocateRoomsImmediately(Reservation reservation) {
         System.out.println("Allocating rooms for reservation ID: " + reservation.getReservationId());

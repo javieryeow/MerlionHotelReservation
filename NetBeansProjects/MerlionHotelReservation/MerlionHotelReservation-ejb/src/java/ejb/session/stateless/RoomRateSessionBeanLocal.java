@@ -7,10 +7,10 @@ package ejb.session.stateless;
 import entity.RoomRate;
 import entity.RoomType;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.RoomRateNotFoundException;
 
 /**
  *
@@ -29,7 +29,7 @@ public interface RoomRateSessionBeanLocal {
 
     public List<RoomRate> viewAllRoomRates();
 
-    public RoomRate findRoomRateById(Long roomRateId);
+    public RoomRate findRoomRateById(Long roomRateId) throws RoomRateNotFoundException;
 
     
 
