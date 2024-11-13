@@ -40,5 +40,7 @@ public interface CreateReservationSessionBeanLocal {
     // Update the reservation status
     public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception;
 
+    public Reservation walkInReserveRoom(String firstName, String lastName, String phoneNumber, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) throws RoomTypeNotFoundException, RoomTypeUnavailableException;
+
  
 }

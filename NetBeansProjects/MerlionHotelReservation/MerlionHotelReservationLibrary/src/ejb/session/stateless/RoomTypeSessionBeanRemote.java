@@ -15,7 +15,7 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomTypeSessionBeanRemote {
     
-    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities);
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities, String higherRoomTypeName);
 
     public RoomType viewRoomType(Long roomTypeId);
 

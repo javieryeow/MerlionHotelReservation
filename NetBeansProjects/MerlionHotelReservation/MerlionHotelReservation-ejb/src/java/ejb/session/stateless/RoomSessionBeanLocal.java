@@ -16,7 +16,7 @@ import javax.ejb.Local;
 @Local
 public interface RoomSessionBeanLocal {
 
-    public Long createRoom(String roomNumber, RoomType roomType);
+    public Long createRoom(String roomNumber, String roomTypeName);
 
     public void updateRoom(Long roomId, String roomNumber, RoomType roomType, Room.RoomStatus status);
 

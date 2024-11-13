@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import javax.ejb.Stateless;
 import javax.persistence.*;
 import java.util.*;
+import javax.ejb.EJB;
 import util.exception.RoomRateNotFoundException;
 
 /**
@@ -20,14 +21,19 @@ import util.exception.RoomRateNotFoundException;
 @Stateless
 public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateSessionBeanLocal {
 
+    @EJB
+    private RoomTypeSessionBeanLocal roomTypeSessionBean;
+    
+    
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
     
     @Override
-    public Long createRoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
+    public Long createRoomRate(String name, String roomTypeName, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
         RoomRate roomRate = new RoomRate();
         roomRate.setName(name);
-        roomRate.setRoomType(roomType);
+        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+        roomRate.setRoomType(roomtype);
         roomRate.setRateType(rateType);
         roomRate.setRatePerNight(ratePerNight);
 

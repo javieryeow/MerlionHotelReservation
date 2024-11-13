@@ -20,7 +20,7 @@ import util.exception.RoomRateNotFoundException;
 @Remote
 public interface RoomRateSessionBeanRemote {
     
-    public Long createRoomRate(String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate);
+    public Long createRoomRate(String name, String roomTypeName, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate);
     
     public RoomRate viewRoomRateDetails(Long roomRateId);
 

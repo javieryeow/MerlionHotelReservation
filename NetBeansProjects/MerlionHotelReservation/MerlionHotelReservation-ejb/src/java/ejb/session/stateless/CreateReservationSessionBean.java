@@ -203,56 +203,68 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         return reservation;
     }
     
-    public Reservation walkInReserveRoom(String firstName, String lastName, String phoneNumber, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
+    @Override
+    public Reservation walkInReserveRoom(String firstName, String lastName, String phoneNumber, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) 
         throws RoomTypeNotFoundException, RoomTypeUnavailableException {
     
-        // Check if walk-in guest already exists or create a new one
-        WalkInGuest walkInGuest = findOrCreateWalkInGuest(firstName, lastName, phoneNumber);
+    // Check if walk-in guest already exists or create a new one
+    WalkInGuest walkInGuest = findOrCreateWalkInGuest(firstName, lastName, phoneNumber);
 
-        BigDecimal totalCost = BigDecimal.ZERO;
-        RoomType selectedRoomType = null;
-
-    // Loop through room types to check availability and calculate cost
-        for (Long roomTypeId : roomTypeIds) {
-            RoomType roomType = em.find(RoomType.class, roomTypeId);
-            if (roomType == null) {
-                throw new RoomTypeNotFoundException("Room Type with ID " + roomTypeId + " not found.");
-            }
-
-            if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
-                throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " is not available for the selected dates.");
-            }
-
-            totalCost = totalCost.add(calculateWalkInAmount(roomType, checkInDate, checkOutDate));
-            selectedRoomType = roomType;
-        }
-
-        // Create a new reservation
-        Reservation reservation = new Reservation();
-        reservation.setCheckInDate(checkInDate);
-        reservation.setCheckOutDate(checkOutDate);
-        reservation.setTotalCost(totalCost);
-        reservation.setStatus(Reservation.ReservationStatus.PENDING);
-        reservation.setWalkInGuest(walkInGuest);
-        reservation.setRoomType(selectedRoomType);
-
-        // Persist reservation
-        em.persist(reservation);
-        em.flush();
-
-        // Determine if immediate allocation is required
-        Calendar currentCalendar = Calendar.getInstance();
-        Calendar checkInCalendar = Calendar.getInstance();
-        checkInCalendar.setTime(checkInDate);
-        boolean isToday = currentCalendar.get(Calendar.YEAR) == checkInCalendar.get(Calendar.YEAR) &&
-                          currentCalendar.get(Calendar.DAY_OF_YEAR) == checkInCalendar.get(Calendar.DAY_OF_YEAR);
-
-        if (isToday && currentCalendar.get(Calendar.HOUR_OF_DAY) >= 2) { // After 2:00 a.m.
-            allocateRoomsImmediately(reservation);
-        }
-
-        return reservation;
+    // Fetch the specified room type
+    RoomType roomType = em.find(RoomType.class, roomTypeId);
+    if (roomType == null) {
+        throw new RoomTypeNotFoundException("Room Type with ID " + roomTypeId + " not found.");
     }
+
+    // Check availability of the requested number of rooms
+    if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate, numberOfRooms)) {
+        throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " does not have enough available rooms for the selected dates.");
+    }
+
+    // Calculate the total cost for all requested rooms
+    BigDecimal totalCost = calculateWalkInAmount(roomType, checkInDate, checkOutDate).multiply(BigDecimal.valueOf(numberOfRooms));
+
+    // Create a new reservation
+    Reservation reservation = new Reservation();
+    reservation.setCheckInDate(checkInDate);
+    reservation.setCheckOutDate(checkOutDate);
+    reservation.setTotalCost(totalCost);
+    reservation.setStatus(Reservation.ReservationStatus.PENDING);
+    reservation.setWalkInGuest(walkInGuest);
+    reservation.setRoomType(roomType);
+    reservation.setNumberOfRooms(numberOfRooms); // assuming the Reservation entity has a numberOfRooms field
+
+    // Persist reservation
+    em.persist(reservation);
+    em.flush();
+
+    // Determine if immediate allocation is required
+    Calendar currentCalendar = Calendar.getInstance();
+    Calendar checkInCalendar = Calendar.getInstance();
+    checkInCalendar.setTime(checkInDate);
+    boolean isToday = currentCalendar.get(Calendar.YEAR) == checkInCalendar.get(Calendar.YEAR) &&
+                      currentCalendar.get(Calendar.DAY_OF_YEAR) == checkInCalendar.get(Calendar.DAY_OF_YEAR);
+
+    if (isToday && currentCalendar.get(Calendar.HOUR_OF_DAY) >= 2) { // After 2:00 a.m.
+        allocateRoomsImmediately(reservation);
+    }
+
+    return reservation;
+}
+
+// Modified method to check if requested number of rooms is available
+    private boolean isRoomTypeAvailable(RoomType roomType, Date checkInDate, Date checkOutDate, int numberOfRooms) {
+        Query query = em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.roomType = :roomType AND r.checkInDate <= :checkOutDate AND r.checkOutDate >= :checkInDate");
+        query.setParameter("roomType", roomType);
+        query.setParameter("checkInDate", checkInDate);
+        query.setParameter("checkOutDate", checkOutDate);
+
+        Long reservedCount = (Long) query.getSingleResult();
+        int availableRooms = roomType.getCapacity() - reservedCount.intValue();
+
+        return availableRooms >= numberOfRooms;
+    }
+
 
     private WalkInGuest findOrCreateWalkInGuest(String firstName, String lastName, String phoneNumber) {
     // Search for existing walk-in guest by phone number

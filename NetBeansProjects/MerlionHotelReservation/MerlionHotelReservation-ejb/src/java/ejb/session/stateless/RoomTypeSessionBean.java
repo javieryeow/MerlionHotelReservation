@@ -23,7 +23,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     
     
     @Override
-    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities) {
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities, String higherRoomTypeName) {
         RoomType rt = new RoomType();
         rt.setName(name);
         rt.setDescription(description);
@@ -31,6 +31,8 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
         rt.setBed(bed);
         rt.setCapacity(capacity);
         rt.setAmenities(amenities);
+        RoomType higherRoomType = findRoomTypeByName(higherRoomTypeName);
+        rt.setHigherRoomType(higherRoomType);
         em.persist(rt);
         em.flush();
         return rt.getRoomTypeId();

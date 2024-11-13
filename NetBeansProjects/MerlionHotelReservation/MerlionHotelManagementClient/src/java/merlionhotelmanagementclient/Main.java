@@ -4,9 +4,12 @@
  */
 package merlionhotelmanagementclient;
 
+import ejb.session.stateless.AllocatingRoomSessionBeanRemote;
 import ejb.session.stateless.CreateCustomerSessionBeanRemote;
 import ejb.session.stateless.CreateEmployeeSessionBeanRemote;
 import ejb.session.stateless.CreatePartnerSessionBeanRemote;
+import ejb.session.stateless.CreateReservationSessionBeanRemote;
+import ejb.session.stateless.CreateRoomAllocationExceptionSessionBeanRemote;
 import ejb.session.stateless.EmployeeLoginRemote;
 import ejb.session.stateless.RoomRateSessionBeanRemote;
 import ejb.session.stateless.RoomSessionBeanRemote;
@@ -20,14 +23,31 @@ import entity.*;
 import entity.Room.RoomStatus;
 import entity.RoomRate.RateType;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import util.exception.EmployeeAlreadyExistsException;
+import util.exception.ReservationNotFoundException;
+import util.exception.RoomRateNotFoundException;
+import util.exception.RoomTypeNotFoundException;
+import util.exception.RoomTypeUnavailableException;
 
 /**
  *
  * @author javieryeow
  */
 public class Main {
+
+    @EJB
+    private static CreateRoomAllocationExceptionSessionBeanRemote createRoomAllocationExceptionSessionBean;
+
+    @EJB
+    private static AllocatingRoomSessionBeanRemote allocatingRoomSessionBean;
+
+    @EJB
+    private static CreateReservationSessionBeanRemote createReservationSessionBean;
 
     @EJB
     private static RoomTypeSessionBeanRemote roomTypeSessionBean;
@@ -49,6 +69,8 @@ public class Main {
 
     @EJB
     private static CreateCustomerSessionBeanRemote createCustomerSessionBean;
+    
+    
     
     private static Scanner sc = new Scanner(System.in);
      
@@ -140,10 +162,18 @@ public class Main {
 
         int choice = sc.nextInt();
         switch (choice) {
-            case 1: /* Search Room logic */ break;
-            case 2: /* Reserve Room logic */ break;
-            case 3: /* Check-in Guest logic */ break;
-            case 4: /* Check-out Guest logic */ break;
+            case 1:
+                walkInSearchRoom();
+                break;
+            case 2:
+                walkInReserveRoom();
+                break;
+            case 3:
+                checkInGuest();
+                break;
+            case 4:
+                checkOutGuest();
+                break;
             case 5:
                 System.out.println("Logging out..."); 
                 return;
@@ -227,7 +257,9 @@ public class Main {
         sc.nextLine();
         System.out.print("Enter amenities: ");
         String amenities = sc.nextLine();
-        Long roomTypeId = roomTypeSessionBean.createRoomType(name, description, size, bed, capacity, amenities);
+        System.out.print("Enter name of nextHigherRoomType: ");
+        String nextHigherRoomType = sc.nextLine();
+        Long roomTypeId = roomTypeSessionBean.createRoomType(name, description, size, bed, capacity, amenities, nextHigherRoomType);
         System.out.println("Room Type successfully created! Room Type ID: " + roomTypeId);
     }
     
@@ -286,9 +318,7 @@ public class Main {
         String roomTypeName = sc.nextLine();
         System.out.println("Enter Room number: ");
         String roomNumber = sc.nextLine();
-        
-        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        Long roomId = roomSessionBean.createRoom(roomNumber, roomtype);
+        Long roomId = roomSessionBean.createRoom(roomNumber, roomTypeName);
         System.out.println("Room created successfully! Room ID: " + roomId);
     }
     
@@ -336,91 +366,113 @@ public class Main {
     // SALES MANAGER METHODS
     
     private static void createNewRoomRate() {
-        
         SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
         System.out.print("Enter Room Rate Name: ");
         String name = sc.nextLine();
         System.out.print("Enter New Room Type Name: ");
         String roomTypeName = sc.nextLine();
-        System.out.println("Select Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4, PROMOTION): ");
+        System.out.println("Select Rate Type (1: PUBLISHED, 2: NORMAL, 3: PEAK, 4: PROMOTION): ");
         int choice = sc.nextInt();
         RateType type = RateType.PUBLISHED;
+
         if (choice == 1) {
             type = RateType.PUBLISHED;
-        } else if(choice == 2) {
+        } else if (choice == 2) {
             type = RateType.NORMAL;
         } else if (choice == 3) {
             type = RateType.PEAK;
         } else if (choice == 4) {
             type = RateType.PROMOTION;
         }
+
         System.out.print("Enter Rate Per Night: ");
         BigDecimal ratePerNight = sc.nextBigDecimal();
         sc.nextLine();
+
         Date start = null;
         Date end = null;
+
         if (choice == 3 || choice == 4) {
-            System.out.print("Enter your Start Date (dd/mm/yy): ");
-            start = inputDateFormat.parse(sc.nextLine().trim());
-            System.out.print("Enter your End Date (dd/mm/yy): ");
-            end = inputDateFormat.parse(sc.nextLine().trim());
+            try {
+                System.out.print("Enter Start Date (dd/mm/yy): ");
+                start = inputDateFormat.parse(sc.nextLine().trim());
+                System.out.print("Enter End Date (dd/mm/yy): ");
+                end = inputDateFormat.parse(sc.nextLine().trim());
+            } catch (ParseException ex) {
+                System.out.println("Invalid date format. Please enter the date in dd/mm/yy format.");
+                return; // Exit method if parsing fails
+            }
         }
-        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        Long roomRateId = roomRateSessionBean.createRoomRate(name, roomtype, type, ratePerNight, start, end);
+        Long roomRateId = roomRateSessionBean.createRoomRate(name, roomTypeName, type, ratePerNight, start, end);
         System.out.println("Room Rate Successfully Created! Room Rate ID: " + roomRateId);
     }
     
     private static void viewRoomRateDetails() {
-        System.out.print("Enter Room Rate ID: ");
-        Long roomRateId = sc.nextLong();
-        RoomRate roomRate = roomRateSessionBean.findRoomRateById(roomRateId);
-        RateType type = roomRate.getRateType();
-        if (type.equals(RateType.PEAK) || type.equals(RateType.PROMOTION)) {
-            System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
-            System.out.printf("%s%s%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
-        } else {
-            System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night");
-            System.out.printf("%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+        try {
+            System.out.print("Enter Room Rate ID: ");
+            Long roomRateId = sc.nextLong();
+            RoomRate roomRate = roomRateSessionBean.findRoomRateById(roomRateId);
+            RateType type = roomRate.getRateType();
+            if (type.equals(RateType.PEAK) || type.equals(RateType.PROMOTION)) {
+                System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
+                System.out.printf("%s%s%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+            } else {
+                System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night");
+                System.out.printf("%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+            }
+        } catch (RoomRateNotFoundException ex) {
+            System.out.println("Room Rate Not Found! Please try again.");
         }
     }
     
     private static void updateRoomRate() {
-        SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
-        System.out.print("Enter Room Rate ID: ");
-        Long roomRateId = sc.nextLong();
-        sc.nextLine();
-        System.out.print("Enter New Room Rate Name: ");
-        String name = sc.nextLine();
-        System.out.print("Enter new Room Type Name: ");
-        String roomTypeName = sc.nextLine();
-        System.out.println("Select New Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4, PROMOTION): ");
-        int choice = sc.nextInt();
-        RateType type = RateType.PUBLISHED;
-        if (choice == 1) {
-            type = RateType.PUBLISHED;
-        } else if(choice == 2) {
-            type = RateType.NORMAL;
-        } else if (choice == 3) {
-            type = RateType.PEAK;
-        } else if (choice == 4) {
-            type = RateType.PROMOTION;
-        }
-        sc.nextLine();
-        System.out.print("Enter new Rate Per Night: ");
-        BigDecimal ratePerNight = sc.nextBigDecimal();
-        sc.nextLine();
-        Date start = null;
-        Date end = null;
-        if (choice == 3 || choice == 4) {
+    SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+    System.out.print("Enter Room Rate ID: ");
+    Long roomRateId = sc.nextLong();
+    sc.nextLine();
+    System.out.print("Enter New Room Rate Name: ");
+    String name = sc.nextLine();
+    System.out.print("Enter new Room Type Name: ");
+    String roomTypeName = sc.nextLine();
+    System.out.println("Select New Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4. PROMOTION): ");
+    int choice = sc.nextInt();
+    RateType type = RateType.PUBLISHED;
+
+    if (choice == 1) {
+        type = RateType.PUBLISHED;
+    } else if (choice == 2) {
+        type = RateType.NORMAL;
+    } else if (choice == 3) {
+        type = RateType.PEAK;
+    } else if (choice == 4) {
+        type = RateType.PROMOTION;
+    }
+
+    sc.nextLine();
+    System.out.print("Enter new Rate Per Night: ");
+    BigDecimal ratePerNight = sc.nextBigDecimal();
+    sc.nextLine();
+
+    Date start = null;
+    Date end = null;
+
+    if (choice == 3 || choice == 4) {
+        try {
             System.out.print("Enter your Start Date (dd/mm/yy): ");
             start = inputDateFormat.parse(sc.nextLine().trim());
             System.out.print("Enter your End Date (dd/mm/yy): ");
             end = inputDateFormat.parse(sc.nextLine().trim());
+        } catch (ParseException ex) {
+            System.out.println("Invalid date format. Please enter the date in dd/mm/yy format.");
+            return; // Exit the method if parsing fails
         }
-        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
-        System.out.println("Room Rate Successfully updated!");
     }
+
+    RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+    roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
+    System.out.println("Room Rate Successfully updated!");
+}
+
     
     private static void deleteRoomRate() {
         System.out.print("Enter Room Rate ID: ");
@@ -441,6 +493,7 @@ public class Main {
     // SYSTEM ADMIN METHODS
     
     private static void createNewEmployee() {
+    try {
         System.out.print("Enter New Employee Username: ");
         String username = sc.nextLine();
         System.out.print("Enter New Employee Password: ");
@@ -448,7 +501,10 @@ public class Main {
         System.out.print("Select New Employee Role (1: OPERATION MANAGER, 2: SALES MANAGER, 3: GUEST RELATION OFFICER, 4: SYSTEM ADMINISTRATOR): ");
         int choice = sc.nextInt();
         sc.nextLine();
+        
         Long employeeId;
+
+        // Determine role based on user input
         if (choice == 1) {
             employeeId = createEmployeeSessionBean.createOperationManager(username, password);
         } else if (choice == 2) {
@@ -458,9 +514,16 @@ public class Main {
         } else {
             employeeId = createEmployeeSessionBean.createSystemAdmin(username, password);
         }
+        
+        // Fetch and print created employee details
         Employee employee = createEmployeeSessionBean.findEmployeeById(employeeId);
-        System.out.println("Employee Successfully Created! Employee ID: " + employeeId + " Employee Role: " + employee.getStatus());  
+        System.out.println("Employee Successfully Created! Employee ID: " + employeeId + " Employee Role: " + employee.getStatus());
+        
+    } catch (EmployeeAlreadyExistsException ex) {
+        System.out.println("Error: An employee with this username already exists. Please try a different username.");
     }
+}
+
     
     private static void viewAllEmployees() {
         List<Employee> list = createEmployeeSessionBean.viewAllEmployees();
@@ -487,7 +550,96 @@ public class Main {
         }
     }
     
+    // GUEST RELATION OFFICER METHODS
+    
+    private static void walkInSearchRoom() {
+        try {
+            SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+            System.out.print("Enter check-in date (DD-MM-YYYY): ");
+            Date checkInDate = inputDateFormat.parse(sc.nextLine());
+
+            System.out.print("Enter check-out date (DD-MM-YYYY): ");
+            Date checkOutDate = inputDateFormat.parse(sc.nextLine());
+
+            List<RoomType> availableRooms = createReservationSessionBean.searchAvailableRooms(checkInDate, checkOutDate);
+            if (availableRooms.isEmpty()) {
+                System.out.println("No available rooms for the selected dates.");
+            } else {
+                System.out.println("Available room types:");
+                for (RoomType roomType : availableRooms) {
+                    System.out.println("- " + roomType.getName() + "- Room Type ID: "+ roomType.getRoomTypeId());
+                }
+            }
+        } catch (ParseException e) {
+            System.out.println("Invalid date format. Please enter the date in DD-MM-YYYY format.");
+        }
+    }
+    
+    private static void walkInReserveRoom() {
+        System.out.print("Enter Guest First Name: ");
+        String firstName = sc.nextLine();
+        System.out.print("Enter Guest Last Name: ");
+        String lastName = sc.nextLine();
+        System.out.print("Enter Guest Phone Number: ");
+        String phoneNumber = sc.nextLine();
+
+        Date checkInDate;
+        Date checkOutDate;
+
+        try {
+            SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+
+            // Prompt for check-in and check-out dates
+            System.out.print("Enter check-in date (DD-MM-YYYY): ");
+            checkInDate = inputDateFormat.parse(sc.nextLine());
+
+            System.out.print("Enter check-out date (DD-MM-YYYY): ");
+            checkOutDate = inputDateFormat.parse(sc.nextLine());
+
+            // Prompt for Room Type ID
+            System.out.print("Enter Room Type ID: ");
+            Long roomTypeId = Long.parseLong(sc.nextLine().trim());
+
+            // Prompt for number of rooms
+            System.out.print("Enter number of rooms to reserve: ");
+            int numberOfRooms = Integer.parseInt(sc.nextLine().trim());
+
+            // Call the reservation method
+            Reservation reservation = createReservationSessionBean.walkInReserveRoom(
+                    firstName, lastName, phoneNumber, roomTypeId, numberOfRooms, checkInDate, checkOutDate);
+
+            // Print confirmation of the reservation
+            System.out.println("Reservation created successfully!");
+            System.out.println("Reservation ID: " + reservation.getReservationId());
+            System.out.println("Total cost: " + reservation.getTotalCost());
+            System.out.println("Status: " + reservation.getStatus());
+
+        } catch (ParseException ex) {
+            System.out.println("Invalid date format. Please enter the date in DD-MM-YYYY format.");
+        } catch (RoomTypeNotFoundException ex) {
+            System.out.println("Error: Room Type not found. " + ex.getMessage());
+        } catch (RoomTypeUnavailableException ex) {
+            System.out.println("Error: Room Type is unavailable for the selected dates. " + ex.getMessage());
+        } catch (NumberFormatException ex) {
+            System.out.println("Invalid input. Please enter numeric values for Room Type ID and number of rooms.");
+        } catch (Exception ex) {
+            System.out.println("An unexpected error occurred: " + ex.getMessage());
+        }
+    }
+    
+    // Method for checking in a guest
+    private static void checkInGuest() {
+    }
+    
+    private static void checkOutGuest() {
+        
+    }
+
+
+}   
+
+    
     
     
       
-}
+

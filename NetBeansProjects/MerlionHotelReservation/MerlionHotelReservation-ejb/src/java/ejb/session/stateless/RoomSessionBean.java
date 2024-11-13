@@ -11,6 +11,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
+import javax.ejb.EJB;
 
 /**
  *
@@ -19,14 +20,19 @@ import java.util.*;
 @Stateless
 public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLocal {
 
+    @EJB
+    private RoomTypeSessionBeanLocal roomTypeSessionBean;
+    
+    
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
     
     @Override
-    public Long createRoom(String roomNumber, RoomType roomType) {
+    public Long createRoom(String roomNumber, String roomTypeName) {
         Room room = new Room();
         room.setRoomNumber(roomNumber);
-        room.setRoomType(roomType);
+        RoomType rt = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+        room.setRoomType(rt);
         em.persist(room);
         em.flush();
         return room.getRoomId();
