@@ -66,7 +66,7 @@ public class Reservation implements Serializable {
     private RoomAllocationException roomAllocationException;
 
     public enum ReservationStatus {
-        PENDING, CONFIRMED, CANCELLED, CHECKED_IN, CHECKED_OUT
+        PENDING, CONFIRMED, CHECKED_IN, CHECKED_OUT
     }
 
     public Reservation() {

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Calendar;
 import java.util.List;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -27,6 +28,13 @@ import util.exception.RoomTypeUnavailableException;
 @Stateless
 public class CreateReservationSessionBean implements CreateReservationSessionBeanRemote, CreateReservationSessionBeanLocal {
 
+    @EJB
+    private CreateRoomAllocationExceptionSessionBeanLocal createRoomAllocationExceptionSessionBean;
+
+    @EJB
+    private AllocatingRoomSessionBeanLocal allocatingRoomSessionBean;
+    
+    
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
 
@@ -126,12 +134,11 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     private boolean isValidStatusTransition(Reservation.ReservationStatus currentStatus, Reservation.ReservationStatus newStatus) {
         switch (currentStatus) {
             case PENDING:
-                return newStatus == Reservation.ReservationStatus.CONFIRMED || newStatus == Reservation.ReservationStatus.CANCELLED;
+                return newStatus == Reservation.ReservationStatus.CONFIRMED;
             case CONFIRMED:
-                return newStatus == Reservation.ReservationStatus.CHECKED_IN || newStatus == Reservation.ReservationStatus.CANCELLED;
+                return newStatus == Reservation.ReservationStatus.CHECKED_IN;
             case CHECKED_IN:
                 return newStatus == Reservation.ReservationStatus.CHECKED_OUT;
-            case CANCELLED:
             case CHECKED_OUT:
                 return false;
             default:
@@ -245,7 +252,9 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     reservation.setStatus(Reservation.ReservationStatus.PENDING);
     reservation.setWalkInGuest(walkInGuest);
     reservation.setRoomType(roomType);
-    reservation.setNumberOfRooms(numberOfRooms); // assuming the Reservation entity has a numberOfRooms field
+    reservation.setNumberOfRooms(numberOfRooms); 
+    walkInGuest.getReservations().add(reservation);
+    roomType.getReservations().add(reservation);
 
     // Persist reservation
     em.persist(reservation);
@@ -259,7 +268,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
                       currentCalendar.get(Calendar.DAY_OF_YEAR) == checkInCalendar.get(Calendar.DAY_OF_YEAR);
 
     if (isToday && currentCalendar.get(Calendar.HOUR_OF_DAY) >= 2) { // After 2:00 a.m.
-        allocateRoomsImmediately(reservation);
+        allocatingRoomSessionBean.allocateRoomForReservation(checkInDate);
     }
 
     return reservation;

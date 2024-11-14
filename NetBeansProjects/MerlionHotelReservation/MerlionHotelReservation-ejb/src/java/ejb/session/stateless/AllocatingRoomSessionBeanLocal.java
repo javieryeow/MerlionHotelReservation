@@ -6,6 +6,8 @@ package ejb.session.stateless;
 
 import java.util.Date;
 import javax.ejb.Local;
+import util.exception.InvalidStatusTransitionException;
+import util.exception.ReservationNotFoundException;
 
 /**
  *
