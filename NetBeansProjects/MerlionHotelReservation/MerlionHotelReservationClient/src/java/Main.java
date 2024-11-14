@@ -6,7 +6,6 @@ import entity.RoomType;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Scanner;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List; 
 import javax.ejb.EJB;
@@ -19,10 +18,12 @@ import util.exception.WrongPasswordException;
 public class Main {
 
     @EJB
-    private static CreateCustomerSessionBeanRemote createCustomerSessionBean;
-    
-    @EJB
     private static CreateReservationSessionBeanRemote createReservationSessionBean;
+
+    @EJB
+    private static CreateCustomerSessionBeanRemote createCustomerSessionBean;
+
+    
     
     private static Scanner sc = new Scanner(System.in);
 
@@ -50,7 +51,6 @@ public class Main {
                     if (loggedInCustomer != null) {
                     System.out.println("Login successful! Welcome, " + loggedInCustomer.getFirstName() + ".");
                     performCustomerOperations(loggedInCustomer);
-                    break;
                     }
                 }
                 catch (CustomerNotFoundException ex) {
@@ -59,6 +59,7 @@ public class Main {
                 catch (WrongPasswordException ex) {
                     System.out.println("Wrong password! Please try again.");
                 }
+                break;
             case 2:
                 System.out.print("Enter First Name: ");
                 String firstName = sc.nextLine();
@@ -76,8 +77,12 @@ public class Main {
                     performCustomerOperations(newCustomer);
                 }
                 catch (CustomerAlreadyExistException ex) {
-                    System.out.println("Customer Already Exists! Please log in instead.");
+                    System.out.println(ex.getMessage());
                 }
+                break;
+            case 3:
+                System.out.print("Exiting System...");
+                return;
         }
     }
         
