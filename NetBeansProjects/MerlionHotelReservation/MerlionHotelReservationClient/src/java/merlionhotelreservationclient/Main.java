@@ -26,14 +26,11 @@ public class Main {
     private boolean isGuestLoggedIn = false;
     private Customer loggedInCustomer;
 
-    public Main() {}
-
     public static void main(String[] args) {
-        Main clientApp = new Main();
-        clientApp.run();
+        startClient();
     }
 
-    public void run() {
+    public static void startClient() {
         Scanner scanner = new Scanner(System.in);
         boolean isLoggedIn = false;
 
@@ -104,7 +101,7 @@ public class Main {
     }
 
     // 1. Guest Login
-    public boolean guestLogin() {
+    public static boolean guestLogin() {
         if (isGuestLoggedIn) {
             System.out.println("You are already logged in.");
             return true;

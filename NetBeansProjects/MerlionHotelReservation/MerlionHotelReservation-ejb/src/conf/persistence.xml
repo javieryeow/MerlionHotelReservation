@@ -3,12 +3,10 @@
   <persistence-unit name="MerlionHotelReservation-ejbPU" transaction-type="JTA">
     <jta-data-source>jdbc/MerlionHotelReservation</jta-data-source>
     <class>entity.Customer</class>
-    <class>entity.CustomerReservation</class>
     <class>entity.Employee</class>
     <class>entity.GuestRelationOfficer</class>
     <class>entity.OperationManager</class>
     <class>entity.Partner</class>
-    <class>entity.ReservationDetails</class>
     <class>entity.Room</class>
     <class>entity.RoomRate</class>
     <class>entity.RoomType</class>

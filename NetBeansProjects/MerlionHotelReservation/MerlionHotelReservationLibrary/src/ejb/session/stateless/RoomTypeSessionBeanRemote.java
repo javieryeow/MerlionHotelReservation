@@ -7,6 +7,7 @@ package ejb.session.stateless;
 import entity.RoomType;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.RoomTypeNotFoundException;
 
 /**
  *
@@ -15,7 +16,7 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomTypeSessionBeanRemote {
     
-    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities, String higherRoomTypeName);
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities, String higherRoomTypeName) throws RoomTypeNotFoundException;
 
     public RoomType viewRoomType(Long roomTypeId);
 
@@ -27,6 +28,6 @@ public interface RoomTypeSessionBeanRemote {
     
     public RoomType findRoomTypeById(Long roomTypeId);
     
-    public RoomType findRoomTypeByName(String roomTypeName);
+    public RoomType findRoomTypeByName(String roomTypeName) throws RoomTypeNotFoundException;
     
 }

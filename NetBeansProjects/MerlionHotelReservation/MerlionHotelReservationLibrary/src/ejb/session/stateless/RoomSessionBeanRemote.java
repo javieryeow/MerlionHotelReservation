@@ -8,6 +8,7 @@ import entity.Room;
 import entity.RoomType;
 import java.util.List;
 import javax.ejb.Remote;
+import util.exception.RoomTypeNotFoundException;
 
 /**
  *
@@ -16,7 +17,7 @@ import javax.ejb.Remote;
 @Remote
 public interface RoomSessionBeanRemote {
     
-    public Long createRoom(String roomNumber, String roomTypeName);
+    public Long createRoom(String roomNumber, String roomTypeName) throws RoomTypeNotFoundException;
 
     public void updateRoom(Long roomId, String roomNumber, RoomType roomType, Room.RoomStatus status);
 

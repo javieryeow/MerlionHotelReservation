@@ -46,13 +46,13 @@ public class Room implements Serializable {
 
     public Room() {
         this.reservations = new ArrayList<Reservation>();
+        this.status = RoomStatus.AVAILABLE;
     }
 
     public Room(String roomNumber, RoomType roomType) {
         this();
         this.roomNumber = roomNumber;
         this.roomType = roomType;
-        this.status = RoomStatus.AVAILABLE;
     }
 
     public Long getRoomId() {

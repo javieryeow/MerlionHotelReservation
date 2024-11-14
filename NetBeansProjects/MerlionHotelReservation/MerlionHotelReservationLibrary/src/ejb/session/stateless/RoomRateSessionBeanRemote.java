@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.List;
 import javax.ejb.Remote;
 import util.exception.RoomRateNotFoundException;
+import util.exception.RoomTypeNotFoundException;
 
 /**
  *
@@ -20,7 +21,7 @@ import util.exception.RoomRateNotFoundException;
 @Remote
 public interface RoomRateSessionBeanRemote {
     
-    public Long createRoomRate(String name, String roomTypeName, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate);
+    public Long createRoomRate(String name, String roomTypeName, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) throws RoomTypeNotFoundException;
     
     public RoomRate viewRoomRateDetails(Long roomRateId);
 

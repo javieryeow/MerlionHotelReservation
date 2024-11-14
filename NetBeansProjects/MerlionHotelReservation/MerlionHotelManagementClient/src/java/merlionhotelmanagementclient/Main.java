@@ -74,174 +74,182 @@ public class Main {
     
     private static Scanner sc = new Scanner(System.in);
      
-    public static void main(String[] args) {
+    public static void main(String[] args) throws RoomTypeNotFoundException {
         startManagementClient();
     }
     
-    public static void startManagementClient() {
+    public static void startManagementClient() throws RoomTypeNotFoundException {
         System.out.print("Enter Employee Username: ");
-        String username = sc.nextLine();
+        String username = sc.nextLine().trim();
         System.out.print("Enter Password: ");
-        String password = sc.nextLine();
+        String password = sc.nextLine().trim();
         
         Employee employee = employeeLogin.login(username, password);
         if (employee != null) {
             System.out.println("Login successful! Welcome, Employee " + employee.getEmployeeId() + ".");
-            if (employee.getStatus() == role.OPERATION_MANAGER) {
-                operationManagerMenu();
-            } else if (employee.getStatus() == role.GUEST_RELATIONS_OFFICER) {
-                guestRelationOfficerMenu();
-            } else if (employee.getStatus() == role.SALES_MANAGER) {
-                salesManagerMenu();
+            if (employee.getStatus().equals(role.OPERATION_MANAGER)) {
+                operationManagerMenu(employee);
+            } else if (employee.getStatus().equals(role.GUEST_RELATIONS_OFFICER)) {
+                guestRelationOfficerMenu(employee);
+            } else if (employee.getStatus().equals(role.SALES_MANAGER)) {
+                salesManagerMenu(employee);
             } else {
-                systemAdminMenu();
+                systemAdminMenu(employee);
             }
         } else {
             System.out.println("Invalid Employee username or Password. Please try again.");
         }
     }
     
-    private static void operationManagerMenu() {
-        System.out.println("1. Create New Room Type");
-        System.out.println("2. Update Room Type");
-        System.out.println("3. Delete Room Type");
-        System.out.println("4. View All Room Types");
-        System.out.println("5. Create New Room");
-        System.out.println("6. Update Room");
-        System.out.println("7. Delete Room");
-        System.out.println("8. View All Rooms");
-        System.out.println("9. View Room Allocation Exception Report");
-        System.out.println("10. View Room Type Details");
-        System.out.println("11. Logout");
+    public static void operationManagerMenu(Employee employee) throws RoomTypeNotFoundException {
+        while (true) {
+            System.out.println("1. Create New Room Type");
+            System.out.println("2. Update Room Type");
+            System.out.println("3. Delete Room Type");
+            System.out.println("4. View All Room Types");
+            System.out.println("5. Create New Room");
+            System.out.println("6. Update Room");
+            System.out.println("7. Delete Room");
+            System.out.println("8. View All Rooms");
+            System.out.println("9. View Room Allocation Exception Report");
+            System.out.println("10. View Room Type Details");
+            System.out.println("11. Logout");
 
-        int choice = sc.nextInt();
-        switch (choice) {
-            case 1:
-                createNewRoomType();
-                break;
-            case 2:
-                updateRoomType();
-                break;
-            case 3:
-                deleteRoomType();
-                break;
-            case 4:
-                viewAllRoomTypes();
-                break;
-            case 5:
-                createNewRoom();
-                break;
-            case 6:
-                updateRoom();
-                break;
-            case 7:
-                deleteRoom();
-                break;
-            case 8:
-                viewAllRooms();
-                break;
-            case 9:
-                viewRoomAllocationExceptionReport();
-                break;
-            case 10:
-                viewRoomTypeDetails();
-                break;
-            case 11:
-                System.out.println("Logging out..."); 
-                return;
-            default: System.out.println("Invalid choice");
-        }
+            int choice = sc.nextInt();
+            switch (choice) {
+                case 1:
+                    createNewRoomType();
+                    break;
+                case 2:
+                    updateRoomType();
+                    break;
+                case 3:
+                    deleteRoomType();
+                    break;
+                case 4:
+                    viewAllRoomTypes();
+                    break;
+                case 5:
+                    createNewRoom();
+                    break;
+                case 6:
+                    updateRoom();
+                    break;
+                case 7:
+                    deleteRoom();
+                    break;
+                case 8:
+                    viewAllRooms();
+                    break;
+                case 9:
+                    viewRoomAllocationExceptionReport();
+                    break;
+                case 10:
+                    viewRoomTypeDetails();
+                    break;
+                case 11:
+                    System.out.println("Logging out..."); 
+                    return;
+                default: System.out.println("Invalid choice");
+            }
+        }  
     }
     
-    private static void guestRelationOfficerMenu() {
-        System.out.println("1. Walk-in Search Room");
-        System.out.println("2. Walk-in Reserve Room");
-        System.out.println("3. Check-in Guest");
-        System.out.println("4. Check-out Guest");
-        System.out.println("5. Logout");
+    public static void guestRelationOfficerMenu(Employee employee) {
+        while (true) {
+            System.out.println("1. Walk-in Search Room");
+            System.out.println("2. Walk-in Reserve Room");
+            System.out.println("3. Check-in Guest");
+            System.out.println("4. Check-out Guest");
+            System.out.println("5. Logout");
 
-        int choice = sc.nextInt();
-        switch (choice) {
-            case 1:
-                walkInSearchRoom();
-                break;
-            case 2:
-                walkInReserveRoom();
-                break;
-            case 3:
-                checkInGuest();
-                break;
-            case 4:
-                checkOutGuest();
-                break;
-            case 5:
-                System.out.println("Logging out..."); 
-                return;
-            default: System.out.println("Invalid choice");
+            int choice = sc.nextInt();
+            switch (choice) {
+                case 1:
+                    walkInSearchRoom();
+                    break;
+                case 2:
+                    walkInReserveRoom();
+                    break;
+                case 3:
+                    checkInGuest();
+                    break;
+                case 4:
+                    checkOutGuest();
+                    break;
+                case 5:
+                    System.out.println("Logging out..."); 
+                    return;
+                default: System.out.println("Invalid choice");
+            }
         }
     }
     
-    private static void salesManagerMenu() {
-        System.out.println("1. Create new Room Rate");
-        System.out.println("2. View Room Rate Details");
-        System.out.println("3. Update Room Rate");
-        System.out.println("4. Delete Room Rate");
-        System.out.println("5. View All Room Rates");
-        System.out.println("6. Logout");
-        
-        int choice = sc.nextInt();
-        switch (choice) {
-            case 1:
-                createNewRoomRate();
-                break;
-            case 2:
-                viewRoomRateDetails();
-                break;
-            case 3:
-                updateRoomRate();
-                break;
-            case 4:
-                deleteRoomRate();
-                break;
-            case 5:
-                viewAllRoomRates();
-                break;
-            case 6:
-                System.out.println("Logging out...");
-                return;
-        }
+    public static void salesManagerMenu(Employee employee) throws RoomTypeNotFoundException {
+        while (true) {
+            System.out.println("1. Create new Room Rate");
+            System.out.println("2. View Room Rate Details");
+            System.out.println("3. Update Room Rate");
+            System.out.println("4. Delete Room Rate");
+            System.out.println("5. View All Room Rates");
+            System.out.println("6. Logout");
+
+            int choice = sc.nextInt();
+            switch (choice) {
+                case 1:
+                    createNewRoomRate();
+                    break;
+                case 2:
+                    viewRoomRateDetails();
+                    break;
+                case 3:
+                    updateRoomRate();
+                    break;
+                case 4:
+                    deleteRoomRate();
+                    break;
+                case 5:
+                    viewAllRoomRates();
+                    break;
+                case 6:
+                    System.out.println("Logging out...");
+                    return;
+            }
+        } 
     }
     
-    private static void systemAdminMenu() {
-        System.out.println("1. Create New Employee");
-        System.out.println("2. View All Employees");
-        System.out.println("3. Create New Partner");
-        System.out.println("4. View All Partners");
-        System.out.println("5. Logout");
-        
-        int choice = sc.nextInt();
-        switch(choice) {
-            case 1:
-                createNewEmployee();
-                break;
-            case 2:
-                viewAllEmployees();
-                break;
-            case 3:
-                createNewPartner();
-                break;
-            case 4:
-                viewAllPartners();
-                break;
-            case 5:
-                System.out.println("Logging out....");
-                return;
-        }
+    public static void systemAdminMenu(Employee employee) {
+        while (true) {
+            System.out.println("1. Create New Employee");
+            System.out.println("2. View All Employees");
+            System.out.println("3. Create New Partner");
+            System.out.println("4. View All Partners");
+            System.out.println("5. Logout");
+
+            int choice = sc.nextInt();
+            switch(choice) {
+                case 1:
+                    createNewEmployee();
+                    break;
+                case 2:
+                    viewAllEmployees();
+                    break;
+                case 3:
+                    createNewPartner();
+                    break;
+                case 4:
+                    viewAllPartners();
+                    break;
+                case 5:
+                    System.out.println("Logging out....");
+                    return;
+            }
+        }    
     }
     
     // OPERATION MANAGER METHODS
     
-    private static void createNewRoomType() {
+    private static void createNewRoomType() throws RoomTypeNotFoundException {
         System.out.print("Enter Room Type Name: ");
         String name = sc.nextLine();
         System.out.print("Enter description: ");
@@ -259,8 +267,13 @@ public class Main {
         String amenities = sc.nextLine();
         System.out.print("Enter name of nextHigherRoomType: ");
         String nextHigherRoomType = sc.nextLine();
-        Long roomTypeId = roomTypeSessionBean.createRoomType(name, description, size, bed, capacity, amenities, nextHigherRoomType);
-        System.out.println("Room Type successfully created! Room Type ID: " + roomTypeId);
+        try {
+            Long roomTypeId = roomTypeSessionBean.createRoomType(name, description, size, bed, capacity, amenities, nextHigherRoomType);
+            System.out.println("Room Type successfully created! Room Type ID: " + roomTypeId);
+        }
+        catch (RoomTypeNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
     
     private static void updateRoomType() {
@@ -313,16 +326,22 @@ public class Main {
         System.out.printf("%s%s%s%s%s%s\n", roomtype.getRoomTypeId(), roomtype.getName(), roomtype.getDescription(), roomtype.getSize(), roomtype.getBed(), roomtype.getCapacity(), roomtype.getAmenities());
     }
     
-    private static void createNewRoom() {
+    private static void createNewRoom() throws RoomTypeNotFoundException {
         System.out.print("Enter Room Type Name: ");
         String roomTypeName = sc.nextLine();
         System.out.println("Enter Room number: ");
         String roomNumber = sc.nextLine();
-        Long roomId = roomSessionBean.createRoom(roomNumber, roomTypeName);
-        System.out.println("Room created successfully! Room ID: " + roomId);
+        try {
+            Long roomId = roomSessionBean.createRoom(roomNumber, roomTypeName);
+            System.out.println("Room created successfully! Room ID: " + roomId);
+        }
+        catch (RoomTypeNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
+        
     }
     
-    private static void updateRoom() {
+    private static void updateRoom() throws RoomTypeNotFoundException {
         System.out.print("Enter Room ID: ");
         Long roomId = sc.nextLong();
         sc.nextLine();
@@ -339,9 +358,14 @@ public class Main {
         } else {
             status = RoomStatus.NOT_AVAILABLE;
         }
-        RoomType roomType = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        roomSessionBean.updateRoom(roomId, roomNumber, roomType, status);
-        System.out.println("Room Successfully Updated!");
+        try {
+            RoomType roomType = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+            roomSessionBean.updateRoom(roomId, roomNumber, roomType, status);
+            System.out.println("Room Successfully Updated!");
+        }
+        catch (RoomTypeNotFoundException ex) {
+            System.out.println("Room Type does not exist.");
+        }
     }
     
     private static void deleteRoom() {
@@ -365,7 +389,7 @@ public class Main {
     
     // SALES MANAGER METHODS
     
-    private static void createNewRoomRate() {
+    private static void createNewRoomRate() throws RoomTypeNotFoundException {
         SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
         System.out.print("Enter Room Rate Name: ");
         String name = sc.nextLine();
@@ -403,8 +427,14 @@ public class Main {
                 return; // Exit method if parsing fails
             }
         }
-        Long roomRateId = roomRateSessionBean.createRoomRate(name, roomTypeName, type, ratePerNight, start, end);
-        System.out.println("Room Rate Successfully Created! Room Rate ID: " + roomRateId);
+        try {
+            Long roomRateId = roomRateSessionBean.createRoomRate(name, roomTypeName, type, ratePerNight, start, end);
+            System.out.println("Room Rate Successfully Created! Room Rate ID: " + roomRateId);
+        }
+        catch (RoomTypeNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
+        
     }
     
     private static void viewRoomRateDetails() {
@@ -425,7 +455,7 @@ public class Main {
         }
     }
     
-    private static void updateRoomRate() {
+    private static void updateRoomRate() throws RoomTypeNotFoundException {
     SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
     System.out.print("Enter Room Rate ID: ");
     Long roomRateId = sc.nextLong();
@@ -437,7 +467,8 @@ public class Main {
     System.out.println("Select New Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4. PROMOTION): ");
     int choice = sc.nextInt();
     RateType type = RateType.PUBLISHED;
-
+    
+    
     if (choice == 1) {
         type = RateType.PUBLISHED;
     } else if (choice == 2) {
@@ -467,10 +498,14 @@ public class Main {
             return; // Exit the method if parsing fails
         }
     }
-
-    RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-    roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
-    System.out.println("Room Rate Successfully updated!");
+    try {
+        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+        roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
+        System.out.println("Room Rate Successfully updated!");
+    }
+    catch (RoomTypeNotFoundException ex) {
+        System.out.println("Room Type Not Found! Please try again.");
+    } 
 }
 
     

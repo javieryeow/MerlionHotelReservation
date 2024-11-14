@@ -11,8 +11,11 @@ import java.math.BigDecimal;
 import javax.ejb.Stateless;
 import javax.persistence.*;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import util.exception.RoomRateNotFoundException;
+import util.exception.RoomTypeNotFoundException;
 
 /**
  *
@@ -29,11 +32,17 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     private EntityManager em;
     
     @Override
-    public Long createRoomRate(String name, String roomTypeName, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
+    public Long createRoomRate(String name, String roomTypeName, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) throws RoomTypeNotFoundException {
         RoomRate roomRate = new RoomRate();
         roomRate.setName(name);
-        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        roomRate.setRoomType(roomtype);
+        RoomType roomtype;
+        try {
+            roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+            roomRate.setRoomType(roomtype);
+            roomtype.getRoomRates().add(roomRate);
+        } catch (RoomTypeNotFoundException ex) {
+            System.out.println("Room Type Not Found.");
+        }
         roomRate.setRateType(rateType);
         roomRate.setRatePerNight(ratePerNight);
 

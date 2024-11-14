@@ -9,7 +9,9 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
+import util.exception.RoomTypeNotFoundException;
 
 /**
  *
@@ -23,7 +25,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     
     
     @Override
-    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities, String higherRoomTypeName) {
+    public Long createRoomType(String name, String description, int size, int bed, int capacity, String amenities, String higherRoomTypeName) throws RoomTypeNotFoundException {
         RoomType rt = new RoomType();
         rt.setName(name);
         rt.setDescription(description);
@@ -31,12 +33,20 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
         rt.setBed(bed);
         rt.setCapacity(capacity);
         rt.setAmenities(amenities);
-        RoomType higherRoomType = findRoomTypeByName(higherRoomTypeName);
-        rt.setHigherRoomType(higherRoomType);
+        try {
+            if (!higherRoomTypeName.equals("None")) {
+            RoomType higherRoomType = findRoomTypeByName(higherRoomTypeName);
+            rt.setHigherRoomType(higherRoomType);
+            }
+        } 
+        catch (RoomTypeNotFoundException ex) {
+            throw ex;  
+        }
         em.persist(rt);
         em.flush();
         return rt.getRoomTypeId();
-    }
+     }
+ 
 
     @Override
     public RoomType viewRoomType(Long roomTypeId) {
@@ -76,10 +86,16 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
     
     @Override
-    public RoomType findRoomTypeByName(String roomTypeName) {
-        Query query = em.createQuery("SELECT rt from RoomType rt WHERE rt.name := inName");
-        query.setParameter(":inName", roomTypeName);
-        RoomType roomtype = (RoomType) query.getSingleResult();
-        return roomtype;
+    public RoomType findRoomTypeByName(String roomTypeName) throws RoomTypeNotFoundException {
+        Query query = em.createQuery("SELECT rt from RoomType rt WHERE rt.name = :inName");
+        query.setParameter("inName", roomTypeName);
+        RoomType roomType;
+        
+        try {
+            roomType = (RoomType) query.getSingleResult();
+            return roomType; 
+        } catch (NoResultException ex) {
+            throw new RoomTypeNotFoundException("Room Type " + roomTypeName + " does not exist!");
+        }
     }
 }

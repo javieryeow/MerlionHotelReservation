@@ -11,7 +11,10 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
+import util.exception.RoomTypeNotFoundException;
 
 /**
  *
@@ -28,11 +31,17 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     private EntityManager em;
     
     @Override
-    public Long createRoom(String roomNumber, String roomTypeName) {
+    public Long createRoom(String roomNumber, String roomTypeName) throws RoomTypeNotFoundException {
         Room room = new Room();
         room.setRoomNumber(roomNumber);
-        RoomType rt = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        room.setRoomType(rt);
+        RoomType rt;
+        try {
+            rt = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+            room.setRoomType(rt);
+            rt.getRooms().add(room);
+        } catch (RoomTypeNotFoundException ex) {
+            System.out.println("RoomType Not found.");
+        }
         em.persist(room);
         em.flush();
         return room.getRoomId();

@@ -51,8 +51,9 @@ public class RoomType implements Serializable {
     @OneToMany(mappedBy = "roomType")
     private List<RoomRate> roomRates;
     
-    @OneToOne
-    private RoomType HigherRoomType;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "HIGHER_ROOMTYPE_ID")
+    private RoomType higherRoomType;
 
     private boolean enabled = true;
 
@@ -238,14 +239,14 @@ public class RoomType implements Serializable {
      * @return the HigherRoomType
      */
     public RoomType getHigherRoomType() {
-        return HigherRoomType;
+        return higherRoomType;
     }
 
     /**
      * @param HigherRoomType the HigherRoomType to set
      */
-    public void setHigherRoomType(RoomType HigherRoomType) {
-        this.HigherRoomType = HigherRoomType;
+    public void setHigherRoomType(RoomType higherRoomType) {
+        this.higherRoomType = higherRoomType;
     }
 
     /**
