@@ -13,8 +13,12 @@ import entity.RoomAllocationException.RoomAllocationExceptionType;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.persistence.Query;
+import util.exception.InvalidStatusTransitionException;
+import util.exception.ReservationNotFoundException;
 
 /**
  *
@@ -22,6 +26,9 @@ import javax.persistence.Query;
  */
 @Stateless
 public class AllocatingRoomSessionBean implements AllocatingRoomSessionBeanRemote, AllocatingRoomSessionBeanLocal {
+
+    @EJB
+    private CreateReservationSessionBeanLocal createReservationSessionBean;
 
     @EJB
     private CreateRoomAllocationExceptionSessionBeanLocal createRoomAllocationExceptionSessionBean;
@@ -100,7 +107,9 @@ public class AllocatingRoomSessionBean implements AllocatingRoomSessionBeanRemot
                 for (Room room: confirmedRooms) {
                     r.getRooms().add(room);
                     room.getReservations().add(r);
+                    room.setStatus(RoomStatus.NOT_AVAILABLE);
                 }
+                r.setStatus(Reservation.ReservationStatus.CONFIRMED);
             }     
         }
     }

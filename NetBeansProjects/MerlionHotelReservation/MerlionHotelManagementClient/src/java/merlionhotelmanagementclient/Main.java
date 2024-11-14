@@ -64,7 +64,7 @@ public class Main {
     private static EmployeeLoginRemote employeeLogin;
 
     @EJB
-    private static PartnerLoginSessionBeanRemote createPartnerSessionBean;
+    private static PartnerLoginSessionBeanRemote partnerLoginSessionBean;
 
     @EJB
     private static CreateEmployeeSessionBeanRemote createEmployeeSessionBean;
@@ -672,12 +672,12 @@ public class Main {
         String username = sc.nextLine();
         System.out.print("Enter New Partner Password: ");
         String password = sc.nextLine();
-        Long partnerId = createPartnerSessionBean.createPartner(username, password);
+        Long partnerId = partnerLoginSessionBean.createPartner(username, password);
         System.out.println("New Partner Successfully Created! Partner ID: " + partnerId);
     }
     
     private static void viewAllPartners() {
-        List<Partner> list = createPartnerSessionBean.viewAllPartners();
+        List<Partner> list = partnerLoginSessionBean.viewAllPartners();
 
         // Display headers with alignment
         System.out.printf("%-15s %-20s %-20s\n", "Partner ID", "Username", "Password");
@@ -771,9 +771,8 @@ public class Main {
     
     // Method for checking in a guest
   private static void checkInGuest() throws ReservationNotFoundException, Exception {
-    Scanner scanner = new Scanner(System.in);
     System.out.print("Enter Reservation ID for check-in: ");
-    Long reservationId = scanner.nextLong();
+    Long reservationId = sc.nextLong();
 
     try {
         // Retrieve the reservation by ID

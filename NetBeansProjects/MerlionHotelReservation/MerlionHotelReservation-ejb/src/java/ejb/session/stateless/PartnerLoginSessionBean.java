@@ -10,6 +10,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.*;
 import java.util.*;
+import util.exception.InvalidPartnerLoginException;
+import util.exception.WrongPasswordException;
 /**
  *
  * @author javieryeow
@@ -37,11 +39,20 @@ public class PartnerLoginSessionBean implements PartnerLoginSessionBeanRemote, P
         return query.getResultList();
     }
     
-    
-    
-    
-    
-    
-    // Add business logic below. (Right-click in editor and choose
-    // "Insert Code > Add Business Method")
+    @Override
+    public Partner partnerLogin(String username, String password) throws WrongPasswordException, InvalidPartnerLoginException {
+        try {
+            TypedQuery<Partner> query = em.createQuery("SELECT p FROM Partner p WHERE p.username = :username", Partner.class);
+            query.setParameter("username", username);
+            Partner partner = query.getSingleResult();
+            
+            if (partner.getPassword().equals(password)) {
+                return partner;
+            } else {
+                throw new WrongPasswordException("Wrong password entered for Username: " + username + ". Please try again.");
+            }
+        } catch (NoResultException ex) {
+            throw new InvalidPartnerLoginException("Invalid login credentials! Please try again.");
+        }
+    } 
 }
