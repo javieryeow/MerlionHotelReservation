@@ -1,22 +1,22 @@
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/J2EE/EJB30/SessionLocal.java to edit this template
+ * Click nbfs://nbhost/SystemFileSystem/Templates/J2EE/EJB30/SessionRemote.java to edit this template
  */
 package ejb.session.stateless;
 
 import entity.Partner;
 import java.util.List;
-import javax.ejb.Local;
+import javax.ejb.Remote;
 
 /**
  *
  * @author javieryeow
  */
-@Local
-public interface CreatePartnerSessionBeanLocal {
-
+@Remote
+public interface PartnerLoginSessionBeanRemote {
+    
     public Long createPartner(String username, String password);
-
+    
     public List<Partner> viewAllPartners();
     
 }

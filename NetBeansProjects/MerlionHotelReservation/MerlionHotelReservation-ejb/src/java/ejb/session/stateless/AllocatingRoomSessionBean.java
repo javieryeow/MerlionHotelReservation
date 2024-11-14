@@ -33,15 +33,15 @@ public class AllocatingRoomSessionBean implements AllocatingRoomSessionBeanRemot
     
     @Override
     public void allocateRoomForReservation(Date checkInDate) {
-        Query query = em.createQuery("SELECT res FROM Reservation res WHERE res.checkinDate = :inCheckinDate");
-        query.setParameter("inCheckinDate", checkInDate);
+        Query query = em.createQuery("SELECT res FROM Reservation res WHERE res.checkInDate = :inCheckInDate");
+        query.setParameter("inCheckInDate", checkInDate);
         List<Reservation> reservations = (List<Reservation>) query.getResultList();
         for (Reservation r: reservations) {
             if(!hasAllocated(r)) {
                 int numberOfRooms = r.getNumberOfRooms();
                 RoomType roomType = r.getRoomType();
                 RoomType nextHigherRoomType = roomType.getHigherRoomType();
-                Query queryRooms = em.createQuery("SELECT r FROM Room r WHERE r.roomType = :inRoomType AND r.roomStatus = :inRoomStatus AND r.enabled = :inEnabled");
+                Query queryRooms = em.createQuery("SELECT r FROM Room r WHERE r.roomType = :inRoomType AND r.status = :inRoomStatus AND r.enabled = :inEnabled");
                 queryRooms.setParameter("inRoomType", roomType);
                 queryRooms.setParameter("inRoomStatus", RoomStatus.AVAILABLE);
                 queryRooms.setParameter("inEnabled", true);
@@ -63,9 +63,9 @@ public class AllocatingRoomSessionBean implements AllocatingRoomSessionBeanRemot
                         }
                     }
                 } else if (requestedRoom.size() < numberOfRooms && nextHigherRoomType != null) {
-                    Query queryHigherRoomType = em.createQuery("SELECT r FROM Room r WHERE r.roomType = :inRoomType AND r.roomStatus = :inRoomStatus AND r.enabled = :inEnabled");
+                    Query queryHigherRoomType = em.createQuery("SELECT r FROM Room r WHERE r.roomType = :inRoomType AND r.status = :inRoomStatus AND r.enabled = :inEnabled");
                     queryHigherRoomType.setParameter("inRoomType", nextHigherRoomType);
-                    queryHigherRoomType.setParameter("inStatus", RoomStatus.AVAILABLE);
+                    queryHigherRoomType.setParameter("inRoomStatus", RoomStatus.AVAILABLE);
                     queryHigherRoomType.setParameter("inEnabled", true);
                     List<Room> resultsHigher = (List<Room>) queryHigherRoomType.getResultList();
                     List<Room> roomsHigherQuery = new ArrayList<>();

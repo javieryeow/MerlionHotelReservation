@@ -7,7 +7,6 @@ package merlionhotelmanagementclient;
 import ejb.session.stateless.AllocatingRoomSessionBeanRemote;
 import ejb.session.stateless.CreateCustomerSessionBeanRemote;
 import ejb.session.stateless.CreateEmployeeSessionBeanRemote;
-import ejb.session.stateless.CreatePartnerSessionBeanRemote;
 import ejb.session.stateless.CreateReservationSessionBeanRemote;
 import ejb.session.stateless.CreateRoomAllocationExceptionSessionBeanRemote;
 import ejb.session.stateless.EmployeeLoginRemote;
@@ -35,6 +34,7 @@ import util.exception.RoomRateNotFoundException;
 import util.exception.RoomTypeNotFoundException;
 import util.exception.RoomTypeUnavailableException;
 import util.exception.InvalidEmployeeLoginException;
+import ejb.session.stateless.PartnerLoginSessionBeanRemote;
 
 /**
  *
@@ -64,7 +64,7 @@ public class Main {
     private static EmployeeLoginRemote employeeLogin;
 
     @EJB
-    private static CreatePartnerSessionBeanRemote createPartnerSessionBean;
+    private static PartnerLoginSessionBeanRemote createPartnerSessionBean;
 
     @EJB
     private static CreateEmployeeSessionBeanRemote createEmployeeSessionBean;
@@ -118,7 +118,8 @@ public class Main {
             System.out.println("8. View All Rooms");
             System.out.println("9. View Room Allocation Exception Report");
             System.out.println("10. View Room Type Details");
-            System.out.println("11. Logout");
+            System.out.println("11. Allocate Rooms to Reservations");
+            System.out.println("12. Logout");
 
             int choice = sc.nextInt();
             sc.nextLine();
@@ -154,6 +155,9 @@ public class Main {
                     viewRoomTypeDetails();
                     break;
                 case 11:
+                    allocateRoomsToReservations();
+                    break;
+                case 12:
                     System.out.println("Logging out..."); 
                     return;
                 default: System.out.println("Invalid choice");
@@ -418,13 +422,40 @@ public class Main {
     }
     
     private static void viewRoomAllocationExceptionReport() {
-        
+        List<RoomAllocationException> list = createRoomAllocationExceptionSessionBean.viewAllRoomAllocationException();
+        System.out.printf("%-25s %-15s %-50s %-20s\n", "Exception ID", "Type", "Issue", "Reservation ID");
+        System.out.println("---------------------------------------------------------------------------------------------");
+
+        for (RoomAllocationException exception : list) {
+            Long reservationId = (exception.getReservation() != null) ? exception.getReservation().getReservationId() : null;
+
+            System.out.printf("%-25s %-15s %-50s %-20s\n", 
+                              exception.getRoomAllocationExceptionId(), 
+                              exception.getType(), 
+                              exception.getIssue(), 
+                              reservationId != null ? reservationId : "N/A");
+        }
+
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
+    }
+    
+    private static void allocateRoomsToReservations() {
+        try {
+            SimpleDateFormat inputDateFormat = new SimpleDateFormat("dd-MM-yy");
+            System.out.print("Enter Check In Date to allocate Reservations (dd-mm-yyyy): ");
+            Date date = inputDateFormat.parse(sc.nextLine().trim());
+            allocatingRoomSessionBean.allocateRoomForReservation(date);
+            System.out.print("All rooms for reservations on " + date + " have been allocated!");
+        } catch (ParseException ex) {
+            System.out.println("Invalid date format. Please enter the date in dd-mm-yyyy format.");
+        }
     }
     
     // SALES MANAGER METHODS
     
     private static void createNewRoomRate() throws RoomTypeNotFoundException {
-        SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("dd-MM-yy");
         System.out.print("Enter Room Rate Name: ");
         String name = sc.nextLine();
         System.out.print("Enter New Room Type Name: ");
@@ -452,12 +483,12 @@ public class Main {
 
         if (choice == 3 || choice == 4) {
             try {
-                System.out.print("Enter Start Date (dd/mm/yy): ");
+                System.out.print("Enter Start Date (dd-mm-yyyy): ");
                 start = inputDateFormat.parse(sc.nextLine().trim());
-                System.out.print("Enter End Date (dd/mm/yy): ");
+                System.out.print("Enter End Date (dd-mm-yyyy): ");
                 end = inputDateFormat.parse(sc.nextLine().trim());
             } catch (ParseException ex) {
-                System.out.println("Invalid date format. Please enter the date in dd/mm/yy format.");
+                System.out.println("Invalid date format. Please enter the date in dd-mm-yyyy format.");
                 return; // Exit method if parsing fails
             }
         }
@@ -499,7 +530,7 @@ public class Main {
     }
     
     private static void updateRoomRate() throws RoomTypeNotFoundException {
-        SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("dd-MM-yy");
         System.out.print("Enter Room Rate ID: ");
         Long roomRateId = sc.nextLong();
         sc.nextLine();
@@ -532,12 +563,12 @@ public class Main {
 
         if (choice == 3 || choice == 4) {
             try {
-                System.out.print("Enter your Start Date (dd/mm/yy): ");
+                System.out.print("Enter your Start Date (dd-mm-yyyy): ");
                 start = inputDateFormat.parse(sc.nextLine().trim());
-                System.out.print("Enter your End Date (dd/mm/yy): ");
+                System.out.print("Enter your End Date (dd-mm-yyyy): ");
                 end = inputDateFormat.parse(sc.nextLine().trim());
             } catch (ParseException ex) {
-                System.out.println("Invalid date format. Please enter the date in dd/mm/yy format.");
+                System.out.println("Invalid date format. Please enter the date in dd-mm-yyyy format.");
                 return; // Exit the method if parsing fails
             }
         }
@@ -665,7 +696,7 @@ public class Main {
     
     private static void walkInSearchRoom() {
         try {
-            SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+            SimpleDateFormat inputDateFormat = new SimpleDateFormat("dd-MM-yy");
             System.out.print("Enter check-in date (DD-MM-YYYY): ");
             Date checkInDate = inputDateFormat.parse(sc.nextLine());
 
@@ -698,7 +729,7 @@ public class Main {
         Date checkOutDate;
 
         try {
-            SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+            SimpleDateFormat inputDateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
             // Prompt for check-in and check-out dates
             System.out.print("Enter check-in date (DD-MM-YYYY): ");

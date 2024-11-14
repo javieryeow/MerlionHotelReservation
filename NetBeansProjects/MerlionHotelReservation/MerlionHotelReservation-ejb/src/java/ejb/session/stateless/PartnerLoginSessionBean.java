@@ -15,7 +15,7 @@ import java.util.*;
  * @author javieryeow
  */
 @Stateless
-public class CreatePartnerSessionBean implements CreatePartnerSessionBeanRemote, CreatePartnerSessionBeanLocal {
+public class PartnerLoginSessionBean implements PartnerLoginSessionBeanRemote, PartnerLoginSessionBeanLocal {
 
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
     private EntityManager em;
