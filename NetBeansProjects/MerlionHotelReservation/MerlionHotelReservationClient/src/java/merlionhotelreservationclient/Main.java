@@ -23,36 +23,24 @@ public class Main {
     @EJB
     private CreateReservationSessionBeanRemote createReservationSessionBean;
     
-    private boolean isGuestLoggedIn = false;
-    private Customer loggedInCustomer;
+    private static Scanner sc = new Scanner(System.in);
 
     public static void main(String[] args) {
         startClient();
     }
 
     public static void startClient() {
-        Scanner scanner = new Scanner(System.in);
-        boolean isLoggedIn = false;
+        System.out.println("*** Welcome to Merlion Hotel Reservation System ***\n");
+        System.out.println("1. Guest Login");
+        System.out.println("2. Register as Guest");
+        System.out.println("3. Exit");
 
-        while (true) {
-            if (!isLoggedIn) {
-                System.out.println("*** Welcome to Guest Login System ***\n");
-                System.out.println("1. Guest Login");
-                System.out.println("2. Register as Guest");
-                System.out.println("3. Exit");
+        int choice = sc.nextInt();
+        sc.nextLine(); // consume newline
 
-                int choice = scanner.nextInt();
-                scanner.nextLine(); // consume newline
-
-                switch (choice) {
-                    case 1:
-                        isLoggedIn = guestLogin();
-                        if (isLoggedIn) {
-                            System.out.println("Login successful!");
-                        } else {
-                            System.out.println("Login failed. Please try again.");
-                        }
-                        break;
+            switch (choice) {
+                case 1:     
+                    guestLogin();
                     case 2:
                         isLoggedIn = registerAsGuest();
                         if (isLoggedIn) {

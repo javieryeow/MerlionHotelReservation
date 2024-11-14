@@ -79,6 +79,7 @@ public class Main {
     }
     
     public static void startManagementClient() throws RoomTypeNotFoundException {
+        System.out.println("*** Welcome to Guest Login System ***\n");
         System.out.print("Enter Employee Username: ");
         String username = sc.nextLine().trim();
         System.out.print("Enter Password: ");
