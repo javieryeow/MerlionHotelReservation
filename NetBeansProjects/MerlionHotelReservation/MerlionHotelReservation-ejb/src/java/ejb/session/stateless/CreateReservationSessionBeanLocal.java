@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import javax.ejb.Local;
+import util.exception.ReservationNotFoundException;
 import util.exception.RoomTypeNotFoundException;
 import util.exception.RoomTypeUnavailableException;
 
@@ -41,6 +42,8 @@ public interface CreateReservationSessionBeanLocal {
     public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) throws Exception;
 
     public Reservation walkInReserveRoom(String firstName, String lastName, String phoneNumber, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) throws RoomTypeNotFoundException, RoomTypeUnavailableException;
+
+    public Reservation findReservationById(Long reservationId) throws ReservationNotFoundException;
 
  
 }

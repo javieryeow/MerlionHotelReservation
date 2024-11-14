@@ -79,7 +79,7 @@ public class Main {
     }
     
     public static void startManagementClient() throws RoomTypeNotFoundException {
-        System.out.println("*** Welcome to Guest Login System ***\n");
+        System.out.println("*** Welcome to Employee Login System ***\n");
         System.out.print("Enter Employee Username: ");
         String username = sc.nextLine().trim();
         System.out.print("Enter Password: ");
@@ -664,13 +664,67 @@ public class Main {
     }
     
     // Method for checking in a guest
-    private static void checkInGuest() {
-    }
-    
-    private static void checkOutGuest() {
-        
-    }
+  private static void checkInGuest() throws Exception {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter Reservation ID for check-in: ");
+    Long reservationId = scanner.nextLong();
 
+    try {
+        // Retrieve the reservation by ID
+        Reservation reservation = createReservationSessionBean.findReservationById(reservationId);
+
+        // Check if the reservation is in a state that allows check-in
+        if (reservation.getStatus() == Reservation.ReservationStatus.PENDING) {
+            // Call the allocation session bean to allocate rooms for the reservation's check-in date
+            allocatingRoomSessionBean.allocateRoomForReservation(reservation.getCheckInDate());
+
+            // Refresh reservation to get updated room allocations
+            reservation = createReservationSessionBean.findReservationById(reservationId);
+
+            // Check if rooms were allocated successfully
+            if (!reservation.getRooms().isEmpty()) {
+                // Change status to CHECKED_IN
+                createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_IN);
+                System.out.println("Guest successfully checked in. Room(s) allocated.");
+
+
+                // Display allocated rooms for confirmation
+                System.out.println("Allocated Room(s): ");
+                for (Room room : reservation.getRooms()) {
+                    System.out.println("- Room Number: " + room.getRoomNumber());
+                }
+            } else {
+                System.out.println("Check-in failed: No rooms were allocated. Please handle manually.");
+            }
+
+        } 
+    } catch (ReservationNotFoundException ex) {
+        System.out.println("Check-in failed: " + ex.getMessage());
+    }
+}
+
+
+// Check-Out Guest Method
+private static void checkOutGuest() throws Exception {
+    Scanner scanner = new Scanner(System.in);
+    System.out.print("Enter Reservation ID for check-out: ");
+    Long reservationId = scanner.nextLong();
+
+    try {
+        // Retrieve the reservation by ID
+        Reservation reservation = createReservationSessionBean.findReservationById(reservationId);
+
+        // Check if the reservation is in a state that allows check-out
+        if (reservation.getStatus() == Reservation.ReservationStatus.CHECKED_IN) {
+            // Attempt to check out the guest
+           createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_OUT);
+                System.out.println("Guest successfully checked Out. Thank you for visiting!");
+
+        } 
+    } catch (ReservationNotFoundException ex) {
+        System.out.println("Check-out failed: " + ex.getMessage());
+    }
+}
 
 }   
 
