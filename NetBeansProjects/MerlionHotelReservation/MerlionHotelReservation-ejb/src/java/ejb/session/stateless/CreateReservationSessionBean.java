@@ -156,6 +156,19 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         Customer customer = em.find(Customer.class, customerId);
         return customer != null ? customer.getReservations() : new ArrayList<>();
     }
+    
+   
+
+    
+
+  public Reservation findReservationById(Long reservationId) throws ReservationNotFoundException {
+    Reservation reservation = em.find(Reservation.class, reservationId);
+    if (reservation == null) {
+        throw new ReservationNotFoundException("Reservation ID " + reservationId + " does not exist.");
+    }
+    return reservation;
+}
+
 
     @Override
     public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
@@ -202,6 +215,9 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
 
         return reservation;
     }
+    
+    
+    
     
     @Override
     public Reservation walkInReserveRoom(String firstName, String lastName, String phoneNumber, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) 
@@ -304,6 +320,8 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     // Multiply the published rate by the number of days
     return publishedRate.multiply(BigDecimal.valueOf(daysBetween));
 }
+    
+ 
 
 }
 
