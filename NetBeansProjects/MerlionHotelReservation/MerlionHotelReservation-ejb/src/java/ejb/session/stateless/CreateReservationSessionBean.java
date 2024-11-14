@@ -161,13 +161,14 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
 
     
 
-  public Reservation findReservationById(Long reservationId) throws ReservationNotFoundException {
-    Reservation reservation = em.find(Reservation.class, reservationId);
-    if (reservation == null) {
-        throw new ReservationNotFoundException("Reservation ID " + reservationId + " does not exist.");
+    @Override
+    public Reservation findReservationById(Long reservationId) throws ReservationNotFoundException {
+        Reservation reservation = em.find(Reservation.class, reservationId);
+        if (reservation == null) {
+            throw new ReservationNotFoundException("Reservation ID " + reservationId + " does not exist.");
+        }
+        return reservation;
     }
-    return reservation;
-}
 
 
     @Override

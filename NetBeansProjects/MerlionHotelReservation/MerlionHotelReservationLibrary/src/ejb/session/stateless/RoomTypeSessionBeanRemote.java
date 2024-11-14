@@ -26,7 +26,7 @@ public interface RoomTypeSessionBeanRemote {
     
     public List<RoomType> viewAllRoomTypes();
     
-    public RoomType findRoomTypeById(Long roomTypeId);
+    public RoomType findRoomTypeById(Long roomTypeId) throws RoomTypeNotFoundException;
     
     public RoomType findRoomTypeByName(String roomTypeName) throws RoomTypeNotFoundException;
     

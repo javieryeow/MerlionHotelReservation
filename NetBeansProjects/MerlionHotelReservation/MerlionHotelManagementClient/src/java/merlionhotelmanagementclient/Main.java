@@ -28,11 +28,13 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.persistence.NoResultException;
 import util.exception.EmployeeAlreadyExistsException;
 import util.exception.ReservationNotFoundException;
 import util.exception.RoomRateNotFoundException;
 import util.exception.RoomTypeNotFoundException;
 import util.exception.RoomTypeUnavailableException;
+import util.exception.InvalidEmployeeLoginException;
 
 /**
  *
@@ -74,31 +76,33 @@ public class Main {
     
     private static Scanner sc = new Scanner(System.in);
      
-    public static void main(String[] args) throws RoomTypeNotFoundException {
+    public static void main(String[] args) throws RoomTypeNotFoundException, ReservationNotFoundException, InvalidEmployeeLoginException, Exception {
         startManagementClient();
     }
     
-    public static void startManagementClient() throws RoomTypeNotFoundException {
+    public static void startManagementClient() throws RoomTypeNotFoundException, ReservationNotFoundException, InvalidEmployeeLoginException, Exception {
         System.out.println("*** Welcome to Employee Login System ***\n");
         System.out.print("Enter Employee Username: ");
         String username = sc.nextLine().trim();
         System.out.print("Enter Password: ");
         String password = sc.nextLine().trim();
         
-        Employee employee = employeeLogin.login(username, password);
-        if (employee != null) {
-            System.out.println("Login successful! Welcome, Employee " + employee.getEmployeeId() + ".");
-            if (employee.getStatus().equals(role.OPERATION_MANAGER)) {
-                operationManagerMenu(employee);
-            } else if (employee.getStatus().equals(role.GUEST_RELATIONS_OFFICER)) {
-                guestRelationOfficerMenu(employee);
-            } else if (employee.getStatus().equals(role.SALES_MANAGER)) {
-                salesManagerMenu(employee);
-            } else {
-                systemAdminMenu(employee);
+        try {
+            Employee employee = employeeLogin.login(username, password);
+            if (employee != null) {
+                System.out.println("Login successful! Welcome, Employee " + employee.getEmployeeId() + ".");
+                if (employee.getStatus().equals(role.OPERATION_MANAGER)) {
+                    operationManagerMenu(employee);
+                } else if (employee.getStatus().equals(role.GUEST_RELATIONS_OFFICER)) {
+                    guestRelationOfficerMenu(employee);
+                } else if (employee.getStatus().equals(role.SALES_MANAGER)) {
+                    salesManagerMenu(employee);
+                } else {
+                    systemAdminMenu(employee);
+                }
             }
-        } else {
-            System.out.println("Invalid Employee username or Password. Please try again.");
+        } catch (InvalidEmployeeLoginException ex) {
+            System.out.println("Invalid login credential: " + ex.getMessage() + "\n");
         }
     }
     
@@ -117,6 +121,7 @@ public class Main {
             System.out.println("11. Logout");
 
             int choice = sc.nextInt();
+            sc.nextLine();
             switch (choice) {
                 case 1:
                     createNewRoomType();
@@ -156,7 +161,7 @@ public class Main {
         }  
     }
     
-    public static void guestRelationOfficerMenu(Employee employee) {
+    public static void guestRelationOfficerMenu(Employee employee) throws ReservationNotFoundException, Exception {
         while (true) {
             System.out.println("1. Walk-in Search Room");
             System.out.println("2. Walk-in Reserve Room");
@@ -165,6 +170,7 @@ public class Main {
             System.out.println("5. Logout");
 
             int choice = sc.nextInt();
+            sc.nextLine();
             switch (choice) {
                 case 1:
                     walkInSearchRoom();
@@ -186,7 +192,7 @@ public class Main {
         }
     }
     
-    public static void salesManagerMenu(Employee employee) throws RoomTypeNotFoundException {
+    public static void salesManagerMenu(Employee employee) throws RoomTypeNotFoundException, RoomRateNotFoundException {
         while (true) {
             System.out.println("1. Create new Room Rate");
             System.out.println("2. View Room Rate Details");
@@ -196,6 +202,7 @@ public class Main {
             System.out.println("6. Logout");
 
             int choice = sc.nextInt();
+            sc.nextLine();
             switch (choice) {
                 case 1:
                     createNewRoomRate();
@@ -228,6 +235,7 @@ public class Main {
             System.out.println("5. Logout");
 
             int choice = sc.nextInt();
+            sc.nextLine();
             switch(choice) {
                 case 1:
                     createNewEmployee();
@@ -310,11 +318,22 @@ public class Main {
     
     private static void viewAllRoomTypes() {
         List<RoomType> list = roomTypeSessionBean.viewAllRoomTypes();
-        System.out.printf("RoomType ID", "Name", "Description", "Size", "Beds", "Capacity", "Amenities");
-        for (RoomType roomtype: list) {
-            System.out.printf("%s%s%s%s%s%s\n", roomtype.getRoomTypeId(), roomtype.getName(), roomtype.getDescription(), roomtype.getSize(), roomtype.getBed(), roomtype.getCapacity(), roomtype.getAmenities());
+        System.out.printf("%-10s %-20s %-50s %-10s %-10s %-10s %-50s\n", 
+                      "RoomType ID", "Name", "Description", "Size", "Beds", "Capacity", "Amenities");
+        System.out.println("---------------------------------------------------------------------------------------------------------------");
+
+        // Print each RoomType in a formatted row
+        for (RoomType roomtype : list) {
+            System.out.printf("%-10d %-20s %-50s %-10s %-10s %-10d %-50s\n",
+                        roomtype.getRoomTypeId(),
+                        roomtype.getName(),
+                        roomtype.getDescription(),
+                        roomtype.getSize(),
+                        roomtype.getBed(),
+                        roomtype.getCapacity(),
+                        roomtype.getAmenities());
         }
-        
+
         System.out.print("Press any key to continue...> ");
         sc.nextLine();
     }
@@ -323,8 +342,21 @@ public class Main {
         System.out.print("Enter Room Type ID: ");
         Long roomTypeId = sc.nextLong();
         sc.nextLine();
-        RoomType roomtype = roomTypeSessionBean.findRoomTypeById(roomTypeId);
-        System.out.printf("%s%s%s%s%s%s\n", roomtype.getRoomTypeId(), roomtype.getName(), roomtype.getDescription(), roomtype.getSize(), roomtype.getBed(), roomtype.getCapacity(), roomtype.getAmenities());
+        try {
+            RoomType roomtype = roomTypeSessionBean.findRoomTypeById(roomTypeId);
+            System.out.printf("%-20s: %d\n", "Room Type ID", roomtype.getRoomTypeId());
+            System.out.printf("%-20s: %s\n", "Name", roomtype.getName());
+            System.out.printf("%-20s: %s\n", "Description", roomtype.getDescription());
+            System.out.printf("%-20s: %s\n", "Size", roomtype.getSize());
+            System.out.printf("%-20s: %s\n", "Bed Type", roomtype.getBed());
+            System.out.printf("%-20s: %d\n", "Capacity", roomtype.getCapacity());
+            System.out.printf("%-20s: %s\n", "Amenities", roomtype.getAmenities());
+        }
+        catch (RoomTypeNotFoundException ex) {
+            System.out.println("Error: " + ex.getMessage());
+        }
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     private static void createNewRoom() throws RoomTypeNotFoundException {
@@ -339,7 +371,6 @@ public class Main {
         catch (RoomTypeNotFoundException ex) {
             System.out.println(ex.getMessage());
         }
-        
     }
     
     private static void updateRoom() throws RoomTypeNotFoundException {
@@ -365,7 +396,7 @@ public class Main {
             System.out.println("Room Successfully Updated!");
         }
         catch (RoomTypeNotFoundException ex) {
-            System.out.println("Room Type does not exist.");
+            System.out.println("Error: " + ex.getMessage());
         }
     }
     
@@ -382,6 +413,8 @@ public class Main {
         for (Room room: list) {
             System.out.printf("%10s%20s%30s%30s\n",room.getRoomId(),room.getRoomNumber(), room.getRoomType().getName(), room.getStatus());
         }
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     private static void viewRoomAllocationExceptionReport() {
@@ -438,76 +471,85 @@ public class Main {
         
     }
     
-    private static void viewRoomRateDetails() {
+    private static void viewRoomRateDetails() throws RoomRateNotFoundException {
         try {
             System.out.print("Enter Room Rate ID: ");
             Long roomRateId = sc.nextLong();
+            sc.nextLine();  // Consume newline
             RoomRate roomRate = roomRateSessionBean.findRoomRateById(roomRateId);
+
+            // Display headers
+            System.out.printf("%-15s: %d\n", "Room Rate ID", roomRate.getRoomRateId());
+            System.out.printf("%-15s: %s\n", "Room Rate Name", roomRate.getName());
+            System.out.printf("%-15s: %s\n", "Room Type", roomRate.getRoomType().getName());
+            System.out.printf("%-15s: %s\n", "Rate Type", roomRate.getRateType());
+            System.out.printf("%-15s: %.2f\n", "Rate Per Night", roomRate.getRatePerNight());
+
+            // Only display start and end dates if the rate type is PEAK or PROMOTION
             RateType type = roomRate.getRateType();
             if (type.equals(RateType.PEAK) || type.equals(RateType.PROMOTION)) {
-                System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
-                System.out.printf("%s%s%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
-            } else {
-                System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night");
-                System.out.printf("%s%s%s%s%s\n", roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType(), roomRate.getRateType(), roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+                System.out.printf("%-15s: %s\n", "Start Date", roomRate.getStartDate());
+                System.out.printf("%-15s: %s\n", "End Date", roomRate.getEndDate());
             }
         } catch (RoomRateNotFoundException ex) {
             System.out.println("Room Rate Not Found! Please try again.");
         }
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     private static void updateRoomRate() throws RoomTypeNotFoundException {
-    SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
-    System.out.print("Enter Room Rate ID: ");
-    Long roomRateId = sc.nextLong();
-    sc.nextLine();
-    System.out.print("Enter New Room Rate Name: ");
-    String name = sc.nextLine();
-    System.out.print("Enter new Room Type Name: ");
-    String roomTypeName = sc.nextLine();
-    System.out.println("Select New Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4. PROMOTION): ");
-    int choice = sc.nextInt();
-    RateType type = RateType.PUBLISHED;
-    
-    
-    if (choice == 1) {
-        type = RateType.PUBLISHED;
-    } else if (choice == 2) {
-        type = RateType.NORMAL;
-    } else if (choice == 3) {
-        type = RateType.PEAK;
-    } else if (choice == 4) {
-        type = RateType.PROMOTION;
-    }
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("d/M/y");
+        System.out.print("Enter Room Rate ID: ");
+        Long roomRateId = sc.nextLong();
+        sc.nextLine();
+        System.out.print("Enter New Room Rate Name: ");
+        String name = sc.nextLine();
+        System.out.print("Enter new Room Type Name: ");
+        String roomTypeName = sc.nextLine();
+        System.out.println("Select New Rate Type (1: PUBLISHED, 2. NORMAL, 3. PEAK, 4. PROMOTION): ");
+        int choice = sc.nextInt();
+        RateType type = RateType.PUBLISHED;
 
-    sc.nextLine();
-    System.out.print("Enter new Rate Per Night: ");
-    BigDecimal ratePerNight = sc.nextBigDecimal();
-    sc.nextLine();
 
-    Date start = null;
-    Date end = null;
-
-    if (choice == 3 || choice == 4) {
-        try {
-            System.out.print("Enter your Start Date (dd/mm/yy): ");
-            start = inputDateFormat.parse(sc.nextLine().trim());
-            System.out.print("Enter your End Date (dd/mm/yy): ");
-            end = inputDateFormat.parse(sc.nextLine().trim());
-        } catch (ParseException ex) {
-            System.out.println("Invalid date format. Please enter the date in dd/mm/yy format.");
-            return; // Exit the method if parsing fails
+        if (choice == 1) {
+            type = RateType.PUBLISHED;
+        } else if (choice == 2) {
+            type = RateType.NORMAL;
+        } else if (choice == 3) {
+            type = RateType.PEAK;
+        } else if (choice == 4) {
+            type = RateType.PROMOTION;
         }
+
+        sc.nextLine();
+        System.out.print("Enter new Rate Per Night: ");
+        BigDecimal ratePerNight = sc.nextBigDecimal();
+        sc.nextLine();
+
+        Date start = null;
+        Date end = null;
+
+        if (choice == 3 || choice == 4) {
+            try {
+                System.out.print("Enter your Start Date (dd/mm/yy): ");
+                start = inputDateFormat.parse(sc.nextLine().trim());
+                System.out.print("Enter your End Date (dd/mm/yy): ");
+                end = inputDateFormat.parse(sc.nextLine().trim());
+            } catch (ParseException ex) {
+                System.out.println("Invalid date format. Please enter the date in dd/mm/yy format.");
+                return; // Exit the method if parsing fails
+            }
+        }
+        try {
+            RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
+            roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
+            System.out.println("Room Rate Successfully updated!");
+        }
+        catch (RoomTypeNotFoundException ex) {
+            System.out.println("Room Type Not Found! Please try again.");
+        } 
     }
-    try {
-        RoomType roomtype = roomTypeSessionBean.findRoomTypeByName(roomTypeName);
-        roomRateSessionBean.updateRoomRate(roomRateId, name, roomtype, type, ratePerNight, start, end);
-        System.out.println("Room Rate Successfully updated!");
-    }
-    catch (RoomTypeNotFoundException ex) {
-        System.out.println("Room Type Not Found! Please try again.");
-    } 
-}
 
     
     private static void deleteRoomRate() {
@@ -519,11 +561,28 @@ public class Main {
     
     private static void viewAllRoomRates() {
         List<RoomRate> list = roomRateSessionBean.viewAllRoomRates();
-        System.out.printf("Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
-        for (RoomRate roomRate: list) { 
-            System.out.printf("%10s%40s%20s%20s%20s%20s\n",roomRate.getRoomRateId(),roomRate.getName(), roomRate.getRateType(), 
-                    roomRate.getRatePerNight(), roomRate.getStartDate(), roomRate.getEndDate());
+    
+        // Display headers with alignment
+        System.out.printf("%-15s %-30s %-20s %-15s %-15s %-15s %-15s\n", 
+                "Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
+
+        // Display each room rate's details in aligned columns
+        for (RoomRate roomRate : list) {
+            // Conditional date display: only show Start and End dates if applicable
+            if (roomRate.getRateType() == RateType.PEAK || roomRate.getRateType() == RateType.PROMOTION) {
+                System.out.printf("%-15d %-30s %-20s %-15s %-15.2f %-15s %-15s\n",
+                        roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType().getName(),
+                        roomRate.getRateType(), roomRate.getRatePerNight(), 
+                        roomRate.getStartDate(), roomRate.getEndDate());
+            } else {
+                System.out.printf("%-15d %-30s %-20s %-15s %-15.2f %-15s %-15s\n",
+                        roomRate.getRoomRateId(), roomRate.getName(), roomRate.getRoomType().getName(),
+                        roomRate.getRateType(), roomRate.getRatePerNight(), 
+                        "-", "-"); // Use "-" if no dates are available
+            }
         }
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     // SYSTEM ADMIN METHODS
@@ -563,10 +622,18 @@ public class Main {
     
     private static void viewAllEmployees() {
         List<Employee> list = createEmployeeSessionBean.viewAllEmployees();
-        System.out.printf("EmployeeID", "Username", "Password", "Role");
-        for (Employee e: list) {
-            System.out.printf("%s%s%s%s\n", e.getEmployeeId(), e.getUsername(), e.getPassword(), e.getStatus());
+
+        // Display headers with alignment
+        System.out.printf("%-15s %-20s %-20s %-15s\n", "Employee ID", "Username", "Password", "Role");
+
+        // Display each employee's details in aligned columns
+        for (Employee e : list) {
+            System.out.printf("%-15d %-20s %-20s %-15s\n",
+                    e.getEmployeeId(), e.getUsername(), e.getPassword(), e.getStatus());
         }
+
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     private static void createNewPartner() {
@@ -580,10 +647,18 @@ public class Main {
     
     private static void viewAllPartners() {
         List<Partner> list = createPartnerSessionBean.viewAllPartners();
-        System.out.printf("PartnerID", "Username", "Password");
-        for (Partner p: list) {
-            System.out.printf("%s%s%s\n", p.getPartnerId(), p.getUsername(), p.getPassword());
+
+        // Display headers with alignment
+        System.out.printf("%-15s %-20s %-20s\n", "Partner ID", "Username", "Password");
+
+        // Display each partner's details in aligned columns
+        for (Partner p : list) {
+            System.out.printf("%-15d %-20s %-20s\n",
+                    p.getPartnerId(), p.getUsername(), p.getPassword());
         }
+
+        System.out.print("Press any key to continue...> ");
+        sc.nextLine();
     }
     
     // GUEST RELATION OFFICER METHODS
@@ -664,7 +739,7 @@ public class Main {
     }
     
     // Method for checking in a guest
-  private static void checkInGuest() throws Exception {
+  private static void checkInGuest() throws ReservationNotFoundException, Exception {
     Scanner scanner = new Scanner(System.in);
     System.out.print("Enter Reservation ID for check-in: ");
     Long reservationId = scanner.nextLong();
@@ -705,7 +780,7 @@ public class Main {
 
 
 // Check-Out Guest Method
-private static void checkOutGuest() throws Exception {
+private static void checkOutGuest() throws ReservationNotFoundException, Exception {
     Scanner scanner = new Scanner(System.in);
     System.out.print("Enter Reservation ID for check-out: ");
     Long reservationId = scanner.nextLong();
@@ -717,8 +792,8 @@ private static void checkOutGuest() throws Exception {
         // Check if the reservation is in a state that allows check-out
         if (reservation.getStatus() == Reservation.ReservationStatus.CHECKED_IN) {
             // Attempt to check out the guest
-           createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_OUT);
-                System.out.println("Guest successfully checked Out. Thank you for visiting!");
+            createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_OUT);
+            System.out.println("Guest successfully checked Out. Thank you for visiting!");
 
         } 
     } catch (ReservationNotFoundException ex) {

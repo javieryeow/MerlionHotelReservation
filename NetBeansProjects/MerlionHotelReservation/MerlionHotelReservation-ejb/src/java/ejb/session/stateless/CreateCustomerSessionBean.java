@@ -27,25 +27,24 @@ public class CreateCustomerSessionBean implements CreateCustomerSessionBeanRemot
 
     @Override
     public Customer registerAsCustomer(String firstName, String lastName, String email, String phoneNumber, String password) throws CustomerAlreadyExistException { // use case 2
-        Query query = em.createQuery("SELECT c FROM Customer c WHERE c.email = :email");
-        query.setParameter("email", email);
-        Customer existingCustomer = (Customer) query.getSingleResult();
-
-        if (existingCustomer != null) {
-            // If customer already exists, throw the exception
+        try {
+            Query query = em.createQuery("SELECT c FROM Customer c WHERE c.email = :email");
+            query.setParameter("email", email);
+            Customer existingCustomer = (Customer) query.getSingleResult();
             throw new CustomerAlreadyExistException("A customer with this email already exists.");
         }
-            
-        Customer customer = new Customer();
-        customer.setFirstName(firstName);
-        customer.setLastName(lastName);
-        customer.setEmail(email);
-        customer.setPhoneNumber(phoneNumber);
-        customer.setPassword(password);
-        em.persist(customer);
-        em.flush(); // Ensure the ID is generated
+        catch (NoResultException ex) {
+            Customer customer = new Customer();
+            customer.setFirstName(firstName);
+            customer.setLastName(lastName);
+            customer.setEmail(email);
+            customer.setPhoneNumber(phoneNumber);
+            customer.setPassword(password);
+            em.persist(customer);
+            em.flush(); // Ensure the ID is generated
 
-        return customer; // Return the created customer
+            return customer; // Return the created customer
+        }   
     }
      
     @Override

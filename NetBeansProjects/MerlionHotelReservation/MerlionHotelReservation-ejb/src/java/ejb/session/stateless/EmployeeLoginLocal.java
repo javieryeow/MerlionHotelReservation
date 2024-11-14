@@ -6,6 +6,7 @@ package ejb.session.stateless;
 
 import entity.Employee;
 import javax.ejb.Local;
+import util.exception.InvalidEmployeeLoginException;
 
 /**
  *
@@ -14,6 +15,6 @@ import javax.ejb.Local;
 @Local
 public interface EmployeeLoginLocal {
 
-    public Employee login(String username, String password);
+    public Employee login(String username, String password) throws InvalidEmployeeLoginException;
     
 }

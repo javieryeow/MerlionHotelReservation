@@ -10,6 +10,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
+import util.exception.InvalidEmployeeLoginException;
 
 /**
  *
@@ -22,15 +23,17 @@ public class EmployeeLogin implements EmployeeLoginRemote, EmployeeLoginLocal {
     private EntityManager em;
     
     @Override
-    public Employee login(String username, String password) {
+    public Employee login(String username, String password) throws InvalidEmployeeLoginException {
         TypedQuery<Employee> query = em.createQuery(
         "SELECT e from Employee e WHERE e.username = :inUsername AND e.password = :inPassword", Employee.class);
         query.setParameter("inUsername", username);
         query.setParameter("inPassword", password);
+        Employee employee = null;
         try {
-            return query.getSingleResult();  
+            employee = query.getSingleResult();  
         } catch (NoResultException e) {
-            return null;  
+            throw new InvalidEmployeeLoginException("Login failed! Please try again.");  
         }
+        return employee;
     } 
 }

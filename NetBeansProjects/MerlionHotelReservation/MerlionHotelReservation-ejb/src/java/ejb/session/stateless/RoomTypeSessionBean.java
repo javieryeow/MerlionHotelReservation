@@ -81,8 +81,13 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
     
     @Override
-    public RoomType findRoomTypeById(Long roomTypeId) {
-        return em.find(RoomType.class, roomTypeId);
+    public RoomType findRoomTypeById(Long roomTypeId) throws RoomTypeNotFoundException {
+        try {
+            return em.find(RoomType.class, roomTypeId);
+        }
+        catch (NoResultException ex) {
+            throw new RoomTypeNotFoundException("Room Type with ID: " + roomTypeId + " does not exist");
+        }
     }
     
     @Override

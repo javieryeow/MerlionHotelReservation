@@ -87,34 +87,36 @@ public class Main {
     }
         
     public static void performCustomerOperations(Customer customer) {
-        System.out.println("1. Search Hotel Room");
-        System.out.println("2. Reserve Hotel Room");
-        System.out.println("3. View My Reservation Details");
-        System.out.println("4. View All My Reservations");
-        System.out.println("5. Logout");
+        while (true) {
+            System.out.println("1. Search Hotel Room");
+            System.out.println("2. Reserve Hotel Room");
+            System.out.println("3. View My Reservation Details");
+            System.out.println("4. View All My Reservations");
+            System.out.println("5. Logout");
 
-        int choice = sc.nextInt();
-        sc.nextLine();
+            int choice = sc.nextInt();
+            sc.nextLine();
 
-        switch (choice) {
-            case 1:
-                searchHotelRoom();
-                break;
-            case 2:
-                reserveHotelRoom();
-                break;
-            case 3:
-                viewReservationDetails();
-                break;
-            case 4:
-                viewAllReservations();
-                break;
-            case 5:
-                System.out.println("Logging out...");
-                return;
-            default:
-                System.out.println("Invalid choice. Please try again.");
-        }
+            switch (choice) {
+                case 1:
+                    searchHotelRoom();
+                    break;
+                case 2:
+                    reserveHotelRoom();
+                    break;
+                case 3:
+                    viewReservationDetails();
+                    break;
+                case 4:
+                    viewAllReservations();
+                    break;
+                case 5:
+                    System.out.println("Logging out...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        } 
     }
     // 3. Search Hotel Room
     private static void searchHotelRoom() {
