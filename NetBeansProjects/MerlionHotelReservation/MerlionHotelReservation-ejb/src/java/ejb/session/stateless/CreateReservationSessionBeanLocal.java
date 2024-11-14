@@ -31,7 +31,7 @@ public interface CreateReservationSessionBeanLocal {
 
     // Reserve a hotel room with a list of room type IDs and date range
 
-   public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
+   public Reservation reserveHotelRoom(Long customerId, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) 
         throws RoomTypeNotFoundException, RoomTypeUnavailableException;
 
     // View all reservations of a specific customer
