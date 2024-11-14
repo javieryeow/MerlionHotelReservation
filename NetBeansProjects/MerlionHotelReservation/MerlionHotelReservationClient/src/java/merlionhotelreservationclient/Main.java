@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List; 
 import javax.ejb.EJB;
+import util.exception.CustomerAlreadyExistException;
 import util.exception.CustomerNotFoundException;
 import util.exception.RoomTypeNotFoundException;
 import util.exception.RoomTypeUnavailableException;
@@ -18,18 +19,18 @@ import util.exception.WrongPasswordException;
 public class Main {
 
     @EJB
-    private CreateCustomerSessionBeanRemote createCustomerSessionBean;
+    private static CreateCustomerSessionBeanRemote createCustomerSessionBean;
     
     @EJB
-    private CreateReservationSessionBeanRemote createReservationSessionBean;
+    private static CreateReservationSessionBeanRemote createReservationSessionBean;
     
     private static Scanner sc = new Scanner(System.in);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CustomerNotFoundException, WrongPasswordException {
         startClient();
     }
 
-    public static void startClient() {
+    public static void startClient() throws CustomerNotFoundException, WrongPasswordException {
         System.out.println("*** Welcome to Merlion Hotel Reservation System ***\n");
         System.out.println("1. Guest Login");
         System.out.println("2. Register as Guest");
@@ -38,126 +39,88 @@ public class Main {
         int choice = sc.nextInt();
         sc.nextLine(); // consume newline
 
-            switch (choice) {
-                case 1:     
-                    guestLogin();
-                    case 2:
-                        isLoggedIn = registerAsGuest();
-                        if (isLoggedIn) {
-                            System.out.println("Registration successful!");
-                        } else {
-                            System.out.println("Registration failed. Please try again.");
-                        }
-                        break;
-                    case 3:
-                        System.out.println("Goodbye!");
-                        return;
-                    default:
-                        System.out.println("Invalid choice. Please try again.");
+        switch (choice) {
+            case 1:     
+                System.out.print("Enter Guest Email: ");
+                String email = sc.nextLine();
+                System.out.print("Enter Password: ");
+                String password = sc.nextLine();
+                try {
+                    Customer loggedInCustomer = createCustomerSessionBean.customerLogin(email, password);
+                    if (loggedInCustomer != null) {
+                    System.out.println("Login successful! Welcome, " + loggedInCustomer.getFirstName() + ".");
+                    performCustomerOperations(loggedInCustomer);
+                    break;
+                    }
                 }
-            } else {
-                System.out.println("3. Search Hotel Room");
-                System.out.println("4. Reserve Hotel Room");
-                System.out.println("5. View My Reservation Details");
-                System.out.println("6. View All My Reservations");
-                System.out.println("7. Exit");
-
-                int choice = scanner.nextInt();
-                scanner.nextLine();
-
-                switch (choice) {
-                    case 3:
-                        searchHotelRoom();
-                        break;
-                    case 4:
-                        reserveHotelRoom();
-                        break;
-                    case 5:
-                        viewReservationDetails();
-                        break;
-                    case 6:
-                        viewAllReservations();
-                        break;
-                    case 7:
-                        System.out.println("Goodbye!");
-                        return;
-                    default:
-                        System.out.println("Invalid choice. Please try again.");
+                catch (CustomerNotFoundException ex) {
+                    System.out.println("Customer does not exist! Please register as guest first.");
                 }
-            }
+                catch (WrongPasswordException ex) {
+                    System.out.println("Wrong password! Please try again.");
+                }
+            case 2:
+                System.out.print("Enter First Name: ");
+                String firstName = sc.nextLine();
+                System.out.print("Enter Last Name: ");
+                String lastName = sc.nextLine();
+                System.out.print("Enter Email: ");
+                String newEmail = sc.nextLine();
+                System.out.print("Enter Phone Number: ");
+                String phoneNumber = sc.nextLine();
+                System.out.print("Enter Password: ");
+                String newPassword = sc.nextLine();
+                try {
+                    Customer newCustomer = createCustomerSessionBean.registerAsCustomer(firstName, lastName, newEmail, phoneNumber, newPassword);
+                    System.out.println("Registration successful! Welcome, " + newCustomer.getFirstName() + ".");
+                    performCustomerOperations(newCustomer);
+                }
+                catch (CustomerAlreadyExistException ex) {
+                    System.out.println("Customer Already Exists! Please log in instead.");
+                }
         }
     }
+        
+    public static void performCustomerOperations(Customer customer) {
+        System.out.println("1. Search Hotel Room");
+        System.out.println("2. Reserve Hotel Room");
+        System.out.println("3. View My Reservation Details");
+        System.out.println("4. View All My Reservations");
+        System.out.println("5. Logout");
 
-    // 1. Guest Login
-    public static boolean guestLogin() {
-        if (isGuestLoggedIn) {
-            System.out.println("You are already logged in.");
-            return true;
-        }
+        int choice = sc.nextInt();
+        sc.nextLine();
 
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.print("Enter email: ");
-        String email = scanner.nextLine();
-
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
-
-        try {
-            Customer customer = createCustomerSessionBean.customerLogin(email, password);
-            isGuestLoggedIn = true;
-            loggedInCustomer = customer;
-            System.out.println("Welcome, " + customer.getFirstName());
-            return true;
-        } catch (CustomerNotFoundException | WrongPasswordException e) {
-            System.out.println("Login failed: " + e.getMessage());
-        }
-
-        return false;
-    }
-
-    // 2. Register as Guest
-    public boolean registerAsGuest() {
-        Scanner scanner = new Scanner(System.in);
-
-        System.out.print("Enter first name: ");
-        String firstName = scanner.nextLine();
-
-        System.out.print("Enter last name: ");
-        String lastName = scanner.nextLine();
-
-        System.out.print("Enter email: ");
-        String email = scanner.nextLine();
-
-        System.out.print("Enter password: ");
-        String password = scanner.nextLine();
-
-        System.out.print("Enter phone number: ");
-        String phoneNumber = scanner.nextLine();
-
-        Customer customer = createCustomerSessionBean.registerAsCustomer(firstName, lastName, email, password, phoneNumber);
-        if (customer != null) {
-            System.out.println("Registration successful. Welcome, " + customer.getFirstName());
-            isGuestLoggedIn = true;
-            loggedInCustomer = customer;
-            return true;
-        } else {
-            System.out.println("A user with that email may already exist.");
-            return false;
+        switch (choice) {
+            case 1:
+                searchHotelRoom();
+                break;
+            case 2:
+                reserveHotelRoom();
+                break;
+            case 3:
+                viewReservationDetails();
+                break;
+            case 4:
+                viewAllReservations();
+                break;
+            case 5:
+                System.out.println("Logging out...");
+                return;
+            default:
+                System.out.println("Invalid choice. Please try again.");
         }
     }
-
     // 3. Search Hotel Room
-    public void searchHotelRoom() {
-        Scanner scanner = new Scanner(System.in);
+    private static void searchHotelRoom() {
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
         try {
             System.out.print("Enter check-in date (DD-MM-YYYY): ");
-            Date checkInDate = dateFormat.parse(scanner.nextLine());
+            Date checkInDate = dateFormat.parse(sc.nextLine());
 
             System.out.print("Enter check-out date (DD-MM-YYYY): ");
-            Date checkOutDate = dateFormat.parse(scanner.nextLine());
+            Date checkOutDate = dateFormat.parse(sc.nextLine());
 
             List<RoomType> availableRooms = createReservationSessionBean.searchAvailableRooms(checkInDate, checkOutDate);
             if (availableRooms.isEmpty()) {
@@ -165,7 +128,7 @@ public class Main {
             } else {
                 System.out.println("Available room types:");
                 for (RoomType roomType : availableRooms) {
-                    System.out.println("- " + roomType.getName());
+                    System.out.println("- " + roomType.getName() + " Room Type ID: " + roomType.getRoomTypeId());
                 }
             }
         } catch (ParseException e) {
@@ -174,32 +137,31 @@ public class Main {
     }
 
     // 4. Reserve Hotel Room
-    public void reserveHotelRoom() {
-        if (!isGuestLoggedIn) {
-            System.out.println("Please log in first.");
-            return;
-        }
+    private static void reserveHotelRoom() {
 
-        Scanner scanner = new Scanner(System.in);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
 
         try {
+            System.out.print("Enter your Customer ID: ");
+            Long id = sc.nextLong();
+            sc.nextLine();
+            System.out.print("Please enter the room type ID to reserve: ");
+            Long roomTypeId = sc.nextLong();
+            sc.nextLine();
+            System.out.print("Enter the number of rooms to reserve: ");
+            int numberOfRooms = sc.nextInt();
+            sc.nextLine();
             System.out.print("Enter check-in date (DD-MM-YYYY): ");
-            Date checkInDate = dateFormat.parse(scanner.nextLine());
+            Date checkInDate = dateFormat.parse(sc.nextLine());
 
             System.out.print("Enter check-out date (DD-MM-YYYY): ");
-            Date checkOutDate = dateFormat.parse(scanner.nextLine());
+            Date checkOutDate = dateFormat.parse(sc.nextLine());
 
-            System.out.print("Please enter the room type ID to reserve, or enter multiple IDs to reserve multiple rooms: ");
-            String[] roomTypeIdsStr = scanner.nextLine().split(",");
-            List<Long> roomTypeIds = new ArrayList<>();
-            for (String idStr : roomTypeIdsStr) {
-                roomTypeIds.add(Long.parseLong(idStr.trim()));
-            }
+            
 
             try {
                 Reservation reservation = createReservationSessionBean.reserveHotelRoom(
-                    loggedInCustomer, roomTypeIds, checkInDate, checkOutDate
+                    id, roomTypeId, numberOfRooms, checkInDate, checkOutDate
                 );
                 System.out.println("Reservation successful. Reservation ID: " + reservation.getReservationId());
 
@@ -213,17 +175,16 @@ public class Main {
     }
 
     // 5. View My Reservation Details
-    public void viewReservationDetails() {
-        if (!isGuestLoggedIn) {
-            System.out.println("Please log in first.");
-            return;
-        }
-
-        Scanner scanner = new Scanner(System.in);
+    private static void viewReservationDetails() {
+        
+        System.out.print("Enter Customer ID: ");
+        Long customerId = sc.nextLong();
+        sc.nextLine();
         System.out.print("Enter reservation ID: ");
-        Long reservationId = scanner.nextLong();
+        Long reservationId = sc.nextLong();
+        sc.nextLine();
 
-        Reservation reservation = createReservationSessionBean.viewCustomerReservation(loggedInCustomer.getCustomerId(), reservationId);
+        Reservation reservation = createReservationSessionBean.viewCustomerReservation(customerId, reservationId);
         if (reservation != null) {
             System.out.println("Reservation Details:");
             System.out.println("Check-in Date: " + reservation.getCheckInDate());
@@ -236,13 +197,12 @@ public class Main {
     }
 
     // 6. View All My Reservations
-    public void viewAllReservations() {
-        if (!isGuestLoggedIn) {
-            System.out.println("Please log in first.");
-            return;
-        }
-
-        List<Reservation> reservations = createReservationSessionBean.viewAllReservations(loggedInCustomer.getCustomerId());
+    private static void viewAllReservations() {
+        
+        System.out.print("Enter Customer ID: ");
+        Long customerId = sc.nextLong();
+        sc.nextLine();
+        List<Reservation> reservations = createReservationSessionBean.viewAllReservations(customerId);
         if (reservations.isEmpty()) {
             System.out.println("You have no reservations.");
         } else {
@@ -253,5 +213,20 @@ public class Main {
         }
     }
 }
+
+
+        
+        
+
+
+
+
+                    
+                    
+                    
+                    
+              
+
+    
 
 

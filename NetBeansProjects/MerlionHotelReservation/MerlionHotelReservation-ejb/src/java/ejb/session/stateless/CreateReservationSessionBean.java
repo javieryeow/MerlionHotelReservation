@@ -158,26 +158,21 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     }
 
     @Override
-    public Reservation reserveHotelRoom(Customer customer, List<Long> roomTypeIds, Date checkInDate, Date checkOutDate) 
+    public Reservation reserveHotelRoom(Long customerId, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) 
         throws RoomTypeNotFoundException, RoomTypeUnavailableException {
     
         BigDecimal totalCost = BigDecimal.ZERO;
-        List<RoomRate> applicableRates = new ArrayList<>();
-        RoomType selectedRoomType = null;
-
-        for (Long roomTypeId : roomTypeIds) {
-            RoomType roomType = em.find(RoomType.class, roomTypeId);
-            if (roomType == null) {
-                throw new RoomTypeNotFoundException("Room Type with ID " + roomTypeId + " not found.");
-            }
-
-            if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
-                throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " is not available for the selected dates.");
-            }
-
-            totalCost = totalCost.add(calculateTotalCost(roomType, checkInDate, checkOutDate));
-            selectedRoomType = roomType;
+        Customer customer = em.find(Customer.class, customerId);
+        RoomType roomType = em.find(RoomType.class, roomTypeId);
+        if (roomType == null) {
+            throw new RoomTypeNotFoundException("Room Type with ID " + roomTypeId + " not found.");
         }
+
+        if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
+            throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " is not available for the selected dates.");
+        }
+        
+        totalCost = calculateTotalCost(roomType, checkInDate, checkOutDate).multiply(BigDecimal.valueOf(numberOfRooms));
 
             Reservation reservation = new Reservation();
             reservation.setCheckInDate(checkInDate);
@@ -185,7 +180,8 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
             reservation.setTotalCost(totalCost);
             reservation.setStatus(Reservation.ReservationStatus.PENDING);
             reservation.setCustomer(customer);
-            reservation.setRoomType(selectedRoomType); // Set selected room type
+            reservation.setRoomType(roomType);
+            customer.getReservations().add(reservation);
 
             em.persist(reservation);
             em.flush();
