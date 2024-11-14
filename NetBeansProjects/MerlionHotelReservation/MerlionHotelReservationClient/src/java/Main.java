@@ -73,7 +73,7 @@ public class Main {
                 String newPassword = sc.nextLine();
                 try {
                     Customer newCustomer = createCustomerSessionBean.registerAsCustomer(firstName, lastName, newEmail, phoneNumber, newPassword);
-                    System.out.println("Registration successful! Welcome, " + newCustomer.getFirstName() + ".");
+                    System.out.println("Registration successful! Welcome, " + newCustomer.getFirstName() + "!");
                     performCustomerOperations(newCustomer);
                 }
                 catch (CustomerAlreadyExistException ex) {
@@ -116,108 +116,114 @@ public class Main {
                 System.out.println("Invalid choice. Please try again.");
         }
     }
-    // 3. Search Hotel Room
-    private static void searchHotelRoom() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+   // 3. Search Hotel Room
+private static void searchHotelRoom() {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+    try {
+        System.out.print("Enter check-in date (DD-MM-YYYY): ");
+        Date checkInDate = dateFormat.parse(sc.nextLine());
+
+        System.out.print("Enter check-out date (DD-MM-YYYY): ");
+        Date checkOutDate = dateFormat.parse(sc.nextLine());
+
+        List<RoomType> availableRooms = createReservationSessionBean.searchAvailableRooms(checkInDate, checkOutDate);
+        if (availableRooms.isEmpty()) {
+            System.out.println("No available rooms for the selected dates.");
+        } else {
+            System.out.printf("%-15s %-20s\n", "Room Type ID", "Name");
+            System.out.println("--------------------------------------");
+
+            for (RoomType roomType : availableRooms) {
+                System.out.printf("%-15d %-20s\n", roomType.getRoomTypeId(), roomType.getName());
+            }
+        }
+    } catch (ParseException e) {
+        System.out.println("Invalid date format. Please enter the date in DD-MM-YYYY format.");
+    }
+}
+
+// 4. Reserve Hotel Room
+private static void reserveHotelRoom() {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+
+    try {
+        System.out.print("Enter your Customer ID: ");
+        Long id = sc.nextLong();
+        sc.nextLine();
+        System.out.print("Please enter the room type ID to reserve: ");
+        Long roomTypeId = sc.nextLong();
+        sc.nextLine();
+        System.out.print("Enter the number of rooms to reserve: ");
+        int numberOfRooms = sc.nextInt();
+        sc.nextLine();
+        System.out.print("Enter check-in date (DD-MM-YYYY): ");
+        Date checkInDate = dateFormat.parse(sc.nextLine());
+
+        System.out.print("Enter check-out date (DD-MM-YYYY): ");
+        Date checkOutDate = dateFormat.parse(sc.nextLine());
 
         try {
-            System.out.print("Enter check-in date (DD-MM-YYYY): ");
-            Date checkInDate = dateFormat.parse(sc.nextLine());
+            Reservation reservation = createReservationSessionBean.reserveHotelRoom(
+                id, roomTypeId, numberOfRooms, checkInDate, checkOutDate
+            );
+            System.out.println("Reservation successful. Reservation ID: " + reservation.getReservationId());
 
-            System.out.print("Enter check-out date (DD-MM-YYYY): ");
-            Date checkOutDate = dateFormat.parse(sc.nextLine());
-
-            List<RoomType> availableRooms = createReservationSessionBean.searchAvailableRooms(checkInDate, checkOutDate);
-            if (availableRooms.isEmpty()) {
-                System.out.println("No available rooms for the selected dates.");
-            } else {
-                System.out.println("Available room types:");
-                for (RoomType roomType : availableRooms) {
-                    System.out.println("- " + roomType.getName() + " Room Type ID: " + roomType.getRoomTypeId());
-                }
-            }
-        } catch (ParseException e) {
-            System.out.println("Invalid date format. Please enter the date in DD-MM-YYYY format.");
+        } catch (RoomTypeNotFoundException | RoomTypeUnavailableException e) {
+            System.out.println("Reservation failed: " + e.getMessage());
         }
+
+    } catch (ParseException e) {
+        System.out.println("Invalid date format. Please enter the date in DD-MM-YYYY format.");
     }
+}
 
-    // 4. Reserve Hotel Room
-    private static void reserveHotelRoom() {
+// 5. View My Reservation Details
+private static void viewReservationDetails() {
+    System.out.print("Enter Customer ID: ");
+    Long customerId = sc.nextLong();
+    sc.nextLine();
+    System.out.print("Enter reservation ID: ");
+    Long reservationId = sc.nextLong();
+    sc.nextLine();
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
-
-        try {
-            System.out.print("Enter your Customer ID: ");
-            Long id = sc.nextLong();
-            sc.nextLine();
-            System.out.print("Please enter the room type ID to reserve: ");
-            Long roomTypeId = sc.nextLong();
-            sc.nextLine();
-            System.out.print("Enter the number of rooms to reserve: ");
-            int numberOfRooms = sc.nextInt();
-            sc.nextLine();
-            System.out.print("Enter check-in date (DD-MM-YYYY): ");
-            Date checkInDate = dateFormat.parse(sc.nextLine());
-
-            System.out.print("Enter check-out date (DD-MM-YYYY): ");
-            Date checkOutDate = dateFormat.parse(sc.nextLine());
-
-            
-
-            try {
-                Reservation reservation = createReservationSessionBean.reserveHotelRoom(
-                    id, roomTypeId, numberOfRooms, checkInDate, checkOutDate
-                );
-                System.out.println("Reservation successful. Reservation ID: " + reservation.getReservationId());
-
-            } catch (RoomTypeNotFoundException | RoomTypeUnavailableException e) {
-                System.out.println("Reservation failed: " + e.getMessage());
-            }
-
-        } catch (ParseException e) {
-            System.out.println("Invalid date format. Please enter the date in DD-MM-YYYY format.");
-        }
+    Reservation reservation = createReservationSessionBean.viewCustomerReservation(customerId, reservationId);
+    if (reservation != null) {
+        System.out.println("Reservation Details:");
+        System.out.printf("%-20s: %s\n", "Check-in Date", reservation.getCheckInDate());
+        System.out.printf("%-20s: %s\n", "Check-out Date", reservation.getCheckOutDate());
+        System.out.printf("%-20s: %s\n", "Total Cost", reservation.getTotalCost());
+        System.out.printf("%-20s: %s\n", "Status", reservation.getStatus());
+        System.out.printf("%-20s: %d\n", "Number of Rooms", reservation.getNumberOfRooms());
+        System.out.printf("%-20s: %s\n", "Room Type", reservation.getRoomType().getName());
+    } else {
+        System.out.println("Reservation not found.");
     }
+}
 
-    // 5. View My Reservation Details
-    private static void viewReservationDetails() {
-        
-        System.out.print("Enter Customer ID: ");
-        Long customerId = sc.nextLong();
-        sc.nextLine();
-        System.out.print("Enter reservation ID: ");
-        Long reservationId = sc.nextLong();
-        sc.nextLine();
+// 6. View All My Reservations
+private static void viewAllReservations() {
+    System.out.print("Enter Customer ID: ");
+    Long customerId = sc.nextLong();
+    sc.nextLine();
+    List<Reservation> reservations = createReservationSessionBean.viewAllReservations(customerId);
+    if (reservations.isEmpty()) {
+        System.out.println("You have no reservations.");
+    } else {
+        System.out.printf("%-15s %-15s %-15s %-15s\n", "Reservation ID", "Check-in Date", "Check-out Date", "Status");
+        System.out.println("-------------------------------------------------------------");
 
-        Reservation reservation = createReservationSessionBean.viewCustomerReservation(customerId, reservationId);
-        if (reservation != null) {
-            System.out.println("Reservation Details:");
-            System.out.println("Check-in Date: " + reservation.getCheckInDate());
-            System.out.println("Check-out Date: " + reservation.getCheckOutDate());
-            System.out.println("Total Cost: " + reservation.getTotalCost());
-            System.out.println("Status: " + reservation.getStatus());
-        } else {
-            System.out.println("Reservation not found.");
-        }
-    }
-
-    // 6. View All My Reservations
-    private static void viewAllReservations() {
-        
-        System.out.print("Enter Customer ID: ");
-        Long customerId = sc.nextLong();
-        sc.nextLine();
-        List<Reservation> reservations = createReservationSessionBean.viewAllReservations(customerId);
-        if (reservations.isEmpty()) {
-            System.out.println("You have no reservations.");
-        } else {
-            System.out.println("All Reservations:");
-            for (Reservation reservation : reservations) {
-                System.out.println("Reservation ID: " + reservation.getReservationId() + ", Check-in: " + reservation.getCheckInDate() + ", Check-out: " + reservation.getCheckOutDate() + ", Status: " + reservation.getStatus());
-            }
+        for (Reservation reservation : reservations) {
+            System.out.printf("%-15d %-15s %-15s %-15s\n",
+                    reservation.getReservationId(),
+                    reservation.getCheckInDate(),
+                    reservation.getCheckOutDate(),
+                    reservation.getStatus());
         }
     }
 }
+}
+
 
 
         
