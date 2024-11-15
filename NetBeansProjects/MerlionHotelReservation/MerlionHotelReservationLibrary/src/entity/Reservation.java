@@ -39,8 +39,7 @@ public class Reservation implements Serializable {
     @Column(nullable = false)
     private ReservationStatus status;
 
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "reservationId")
+    @ManyToMany
     private List<RoomRate> roomRates;
     
     @ManyToMany

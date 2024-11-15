@@ -22,7 +22,7 @@ public interface RoomTypeSessionBeanLocal {
 
     public void updateRoomType(Long roomTypeId, String name, String description, int size, int bed, int capacity, String amenities);
 
-    public void deleteRoomType(Long roomTypeId);
+    public void deleteRoomType(Long roomTypeId) throws RoomTypeNotFoundException;
 
     public List<RoomType> viewAllRoomTypes();
 

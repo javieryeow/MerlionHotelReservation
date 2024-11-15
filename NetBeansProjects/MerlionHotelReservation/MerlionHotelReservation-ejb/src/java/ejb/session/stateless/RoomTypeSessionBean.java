@@ -4,6 +4,7 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
 import entity.RoomType;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
@@ -67,12 +68,21 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
     }
     
     @Override
-    public void deleteRoomType(Long roomTypeId) {
-        RoomType roomType = em.find(RoomType.class, roomTypeId);
-        if (roomType != null) {
-            roomType.setDisabled();
-            em.merge(roomType);
-        }
+    public void deleteRoomType(Long roomTypeId) throws RoomTypeNotFoundException {
+        try {
+            RoomType roomType = em.find(RoomType.class, roomTypeId);
+            if (roomType != null) {
+                List<Reservation> reservations = roomType.getReservations();
+                if (reservations.size() > 0) {
+                    roomType.setDisabled();
+                    } else {
+                    em.remove(roomType);
+                    em.flush();
+                }
+            }
+        } catch (NoResultException ex) {
+            throw new RoomTypeNotFoundException("Room Type Not Found!");
+        }  
     }
     
     @Override

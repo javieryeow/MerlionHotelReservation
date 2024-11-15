@@ -3,6 +3,7 @@ import ejb.session.stateless.CreateReservationSessionBeanRemote;
 import entity.Customer;
 import entity.Reservation;
 import entity.RoomType;
+import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Scanner;
@@ -194,7 +195,12 @@ private static void viewReservationDetails() {
         System.out.println("Reservation Details:");
         System.out.printf("%-20s: %s\n", "Check-in Date", reservation.getCheckInDate());
         System.out.printf("%-20s: %s\n", "Check-out Date", reservation.getCheckOutDate());
-        System.out.printf("%-20s: %s\n", "Total Cost", reservation.getTotalCost());
+        
+        // Calculate total cost using the calculateTotalCost method
+        BigDecimal calculatedTotalCost = createReservationSessionBean.calculateTotalCost(
+            reservation.getRoomType(), reservation.getCheckInDate(), reservation.getCheckOutDate()).multiply(BigDecimal.valueOf(reservation.getNumberOfRooms()));
+        
+        System.out.printf("%-20s: %s\n", "Total Cost", calculatedTotalCost);
         System.out.printf("%-20s: %s\n", "Status", reservation.getStatus());
         System.out.printf("%-20s: %d\n", "Number of Rooms", reservation.getNumberOfRooms());
         System.out.printf("%-20s: %s\n", "Room Type", reservation.getRoomType().getName());

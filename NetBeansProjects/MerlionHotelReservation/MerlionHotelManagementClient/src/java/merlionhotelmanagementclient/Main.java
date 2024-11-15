@@ -24,10 +24,6 @@ import entity.RoomRate.RateType;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.persistence.NoResultException;
 import util.exception.EmployeeAlreadyExistsException;
 import util.exception.ReservationNotFoundException;
 import util.exception.RoomRateNotFoundException;
@@ -35,6 +31,7 @@ import util.exception.RoomTypeNotFoundException;
 import util.exception.RoomTypeUnavailableException;
 import util.exception.InvalidEmployeeLoginException;
 import ejb.session.stateless.PartnerLoginSessionBeanRemote;
+import util.exception.RoomNotFoundException;
 
 /**
  *
@@ -106,7 +103,7 @@ public class Main {
         }
     }
     
-    public static void operationManagerMenu(Employee employee) throws RoomTypeNotFoundException {
+    public static void operationManagerMenu(Employee employee) throws RoomTypeNotFoundException, RoomNotFoundException {
         while (true) {
             System.out.println("1. Create New Room Type");
             System.out.println("2. Update Room Type");
@@ -230,7 +227,7 @@ public class Main {
         } 
     }
     
-    public static void systemAdminMenu(Employee employee) {
+    public static void systemAdminMenu(Employee employee) throws EmployeeAlreadyExistsException {
         while (true) {
             System.out.println("1. Create New Employee");
             System.out.println("2. View All Employees");
@@ -312,12 +309,16 @@ public class Main {
         System.out.println("Room Type Successfully Updated!");
     }
     
-    private static void deleteRoomType() {
+    private static void deleteRoomType() throws RoomTypeNotFoundException {
         System.out.print("Enter Room Type ID: ");
         Long roomTypeId = sc.nextLong();
         sc.nextLine();
-        roomTypeSessionBean.deleteRoomType(roomTypeId);
-        System.out.println("Room Type Successfully Deleted!");
+        try {
+            roomTypeSessionBean.deleteRoomType(roomTypeId);
+            System.out.println("Room Type Successfully Deleted!");
+        } catch (RoomTypeNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
     
     private static void viewAllRoomTypes() {
@@ -377,7 +378,7 @@ public class Main {
         }
     }
     
-    private static void updateRoom() throws RoomTypeNotFoundException {
+    private static void updateRoom() throws RoomTypeNotFoundException, RoomNotFoundException {
         System.out.print("Enter Room ID: ");
         Long roomId = sc.nextLong();
         sc.nextLine();
@@ -399,16 +400,20 @@ public class Main {
             roomSessionBean.updateRoom(roomId, roomNumber, roomType, status);
             System.out.println("Room Successfully Updated!");
         }
-        catch (RoomTypeNotFoundException ex) {
+        catch (RoomTypeNotFoundException | RoomNotFoundException ex) {
             System.out.println("Error: " + ex.getMessage());
         }
     }
     
-    private static void deleteRoom() {
+    private static void deleteRoom() throws RoomNotFoundException {
         System.out.print("Enter Room ID: ");
         Long roomId = sc.nextLong();
-        roomSessionBean.deleteRoom(roomId);
-        System.out.println("Room Successfully Deleted!");
+        try {
+            roomSessionBean.deleteRoom(roomId);
+            System.out.println("Room Successfully Deleted!");
+        } catch (RoomNotFoundException ex) {
+            System.out.println("Error: " + ex.getMessage());
+        }
     }
     
     private static void viewAllRooms() {
@@ -529,7 +534,7 @@ public class Main {
         sc.nextLine();
     }
     
-    private static void updateRoomRate() throws RoomTypeNotFoundException {
+    private static void updateRoomRate() throws RoomTypeNotFoundException, RoomRateNotFoundException {
         SimpleDateFormat inputDateFormat = new SimpleDateFormat("dd-MM-yy");
         System.out.print("Enter Room Rate ID: ");
         Long roomRateId = sc.nextLong();
@@ -580,14 +585,21 @@ public class Main {
         catch (RoomTypeNotFoundException ex) {
             System.out.println("Room Type Not Found! Please try again.");
         } 
+        catch (RoomRateNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
     
-    private static void deleteRoomRate() {
+    private static void deleteRoomRate() throws RoomRateNotFoundException {
         System.out.print("Enter Room Rate ID: ");
         Long roomRateId = sc.nextLong();
-        roomRateSessionBean.deleteRoomRate(roomRateId);
-        System.out.println("Room Rate Successfully Deleted!");
+        try {
+            roomRateSessionBean.deleteRoomRate(roomRateId);
+            System.out.println("Room Rate Successfully Deleted!");
+        } catch (RoomRateNotFoundException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
     
     private static void viewAllRoomRates() {
@@ -618,7 +630,7 @@ public class Main {
     
     // SYSTEM ADMIN METHODS
     
-    private static void createNewEmployee() {
+    private static void createNewEmployee() throws EmployeeAlreadyExistsException {
     try {
         System.out.print("Enter New Employee Username: ");
         String username = sc.nextLine();

@@ -182,7 +182,6 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     public Reservation reserveHotelRoom(Long customerId, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) 
         throws RoomTypeNotFoundException, RoomTypeUnavailableException {
     
-        BigDecimal totalCost = BigDecimal.ZERO;
         Customer customer = em.find(Customer.class, customerId);
         RoomType roomType = em.find(RoomType.class, roomTypeId);
         if (roomType == null) {
@@ -190,10 +189,10 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         }
 
         if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
-            throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " is not available for the selected dates.");
+            throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " does not have enough available rooms.");
         }
         
-        totalCost = calculateTotalCost(roomType, checkInDate, checkOutDate).multiply(BigDecimal.valueOf(numberOfRooms));
+        BigDecimal totalCost = calculateTotalCost(roomType, checkInDate, checkOutDate).multiply(BigDecimal.valueOf(numberOfRooms));
 
             Reservation reservation = new Reservation();
             reservation.setCheckInDate(checkInDate);
@@ -202,7 +201,9 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
             reservation.setStatus(Reservation.ReservationStatus.PENDING);
             reservation.setCustomer(customer);
             reservation.setRoomType(roomType);
+            reservation.setNumberOfRooms(numberOfRooms);
             customer.getReservations().add(reservation);
+            roomType.getReservations().add(reservation);
 
             em.persist(reservation);
             em.flush();
@@ -213,10 +214,9 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
             boolean isToday = currentCalendar.get(Calendar.YEAR) == checkInCalendar.get(Calendar.YEAR) &&
                       currentCalendar.get(Calendar.DAY_OF_YEAR) == checkInCalendar.get(Calendar.DAY_OF_YEAR);
 
-                if (isToday && currentCalendar.get(Calendar.HOUR_OF_DAY) >= 14) { // 2:00 PM is 14:00 in 24-hour format
-            allocateRoomsImmediately(reservation);
-        }
-
+            if (isToday && currentCalendar.get(Calendar.HOUR_OF_DAY) >= 2) { // 2:00 PM is 14:00 in 24-hour format
+                allocatingRoomSessionBean.allocateRoomForReservation(checkInDate);
+            }
         return reservation;
     }
     
@@ -305,11 +305,11 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         }
     }
 
-    private void allocateRoomsImmediately(Reservation reservation) {
-        System.out.println("Allocating rooms for reservation ID: " + reservation.getReservationId());
-        reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
-        em.merge(reservation);
-    }
+    //private void allocateRoomsImmediately(Reservation reservation) {
+    //    System.out.println("Allocating rooms for reservation ID: " + reservation.getReservationId());
+    //    reservation.setStatus(Reservation.ReservationStatus.CONFIRMED);
+    //    em.merge(reservation);
+    //}
 
     
     private BigDecimal calculateWalkInAmount(RoomType roomType, Date checkInDate, Date checkOutDate) {

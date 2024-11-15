@@ -25,9 +25,9 @@ public interface RoomRateSessionBeanRemote {
     
     public RoomRate viewRoomRateDetails(Long roomRateId);
 
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate);
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RoomRate.RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) throws RoomRateNotFoundException;
 
-    public void deleteRoomRate(Long roomRateId);
+    public void deleteRoomRate(Long roomRateId) throws RoomRateNotFoundException;
 
     public List<RoomRate> viewAllRoomRates();
     

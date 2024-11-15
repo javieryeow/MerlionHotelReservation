@@ -6,7 +6,6 @@ package entity;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,6 +33,9 @@ public class RoomRate implements Serializable {
     @JoinColumn(nullable = false)
     private RoomType roomType;
     
+    @ManyToMany(mappedBy = "roomRates")
+    private List<Reservation> reservations;
+    
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RateType rateType;
@@ -57,9 +59,11 @@ public class RoomRate implements Serializable {
     }
 
     public RoomRate() {
+        this.reservations = new ArrayList<Reservation>();
     }
 
     public RoomRate(String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
+        this();
         this.name = name;
         this.roomType = roomType;
         this.rateType = rateType;
@@ -200,6 +204,20 @@ public class RoomRate implements Serializable {
      */
     public void setEndDate(Date endDate) {
         this.endDate = endDate;
+    }
+
+    /**
+     * @return the reservations
+     */
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    /**
+     * @param reservations the reservations to set
+     */
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
     }
     
 }

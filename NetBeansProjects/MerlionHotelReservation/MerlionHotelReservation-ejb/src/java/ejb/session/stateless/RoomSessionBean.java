@@ -4,6 +4,7 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
 import entity.Room;
 import entity.Room.RoomStatus;
 import entity.RoomType;
@@ -14,6 +15,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
+import javax.persistence.NoResultException;
+import util.exception.RoomNotFoundException;
 import util.exception.RoomTypeNotFoundException;
 
 /**
@@ -48,22 +51,36 @@ public class RoomSessionBean implements RoomSessionBeanRemote, RoomSessionBeanLo
     }
     
     @Override
-    public void updateRoom(Long roomId, String roomNumber, RoomType roomType, RoomStatus status) {
-        Room room = em.find(Room.class, roomId);
-        if (room != null) {
-            room.setRoomNumber(roomNumber);
-            room.setRoomType(roomType);
-            room.setStatus(status);
+    public void updateRoom(Long roomId, String roomNumber, RoomType roomType, RoomStatus status) throws RoomNotFoundException {
+        try {
+            Room room = em.find(Room.class, roomId);
+            if (room != null) {
+                room.setRoomNumber(roomNumber);
+                room.setRoomType(roomType);
+                room.setStatus(status);
+            }
+        } catch (NoResultException ex) {
+            throw new RoomNotFoundException("Room Not Found!");
         }
     }
 
     @Override
-    public void deleteRoom(Long roomId) {
-        Room room = em.find(Room.class, roomId);
-        if (room != null) {
-            room.setDisabled();
-            em.merge(room);
+    public void deleteRoom(Long roomId) throws RoomNotFoundException {
+        try {
+            Room room = em.find(Room.class, roomId);
+            if (room != null) {
+                List<Reservation> reservations = room.getReservations();
+                if (reservations.size() > 0) {
+                    room.setDisabled();
+                } else {
+                    em.remove(room);
+                    em.flush();
+                }
+            }
+        } catch (NoResultException ex) {
+            throw new RoomNotFoundException("Room Not Found!");
         }
+        
     }
 
     @Override

@@ -4,6 +4,7 @@
  */
 package ejb.session.stateless;
 
+import entity.Reservation;
 import entity.RoomRate;
 import entity.RoomRate.RateType;
 import entity.RoomType;
@@ -62,42 +63,46 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
     }
     
     @Override
-    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) {
-        RoomRate roomRate = em.find(RoomRate.class, roomRateId);
-        if (roomRate != null && roomRate.isEnabled()) { // Only allow updates if enabled
-            roomRate.setName(name);
-            roomRate.setRoomType(roomType);
-            roomRate.setRateType(rateType);
-            roomRate.setRatePerNight(ratePerNight);
-            
-            if (rateType == RateType.PEAK || rateType == RateType.PROMOTION) {
-                roomRate.setStartDate(startDate);
-                roomRate.setEndDate(endDate);
-            } else {
-                roomRate.setStartDate(null);
-                roomRate.setEndDate(null);
+    public void updateRoomRate(Long roomRateId, String name, RoomType roomType, RateType rateType, BigDecimal ratePerNight, Date startDate, Date endDate) throws RoomRateNotFoundException {
+        try {
+            RoomRate roomRate = em.find(RoomRate.class, roomRateId);
+            if (roomRate != null && roomRate.isEnabled()) { // Only allow updates if enabled
+                roomRate.setName(name);
+                roomRate.setRoomType(roomType);
+                roomRate.setRateType(rateType);
+                roomRate.setRatePerNight(ratePerNight);
+
+                if (rateType == RateType.PEAK || rateType == RateType.PROMOTION) {
+                    roomRate.setStartDate(startDate);
+                    roomRate.setEndDate(endDate);
+                } else {
+                    roomRate.setStartDate(null);
+                    roomRate.setEndDate(null);
+                }
+                em.merge(roomRate);
             }
-            em.merge(roomRate);
-        }
+        } catch (NoResultException ex) {
+            throw new RoomRateNotFoundException("Room Rate Not Found");
+        } 
     }
     
     @Override
-    public void deleteRoomRate(Long roomRateId) {
-        RoomRate roomRate = em.find(RoomRate.class, roomRateId);
-        if (roomRate != null) {
-            if (canDeleteRoomRate(roomRateId)) { 
-                em.remove(roomRate);
-            } else {
-                roomRate.setDisabled(); 
-                em.merge(roomRate);
+    public void deleteRoomRate(Long roomRateId) throws RoomRateNotFoundException {
+        try {
+            RoomRate roomRate = em.find(RoomRate.class, roomRateId);
+            if (roomRate != null) {
+                List<Reservation> reservations = roomRate.getReservations();
+                if (reservations.size() > 0) { 
+                    roomRate.setDisabled();
+                } else {
+                    em.remove(roomRate); 
+                    em.flush();
+                }
             }
+        } catch (NoResultException ex) {
+            throw new RoomRateNotFoundException("Room Rate Not Found!");
         }
-    }
-    
-    private boolean canDeleteRoomRate(Long roomRateId) {
-        // Logic to check if room rate is not in use (e.g., no current reservations)
-        // This is a placeholder for actual implementation
-        return true;
+        
     }
     
     @Override
