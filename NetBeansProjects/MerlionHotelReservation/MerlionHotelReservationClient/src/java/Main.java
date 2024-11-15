@@ -138,7 +138,9 @@ private static void searchHotelRoom() {
             System.out.println("--------------------------------------");
 
             for (RoomType roomType : availableRooms) {
-                System.out.printf("%-15d %-20s\n", roomType.getRoomTypeId(), roomType.getName());
+                if (roomType.isEnabled()) {
+                    System.out.printf("%-15d %-20s\n", roomType.getRoomTypeId(), roomType.getName());
+                }
             }
         }
     } catch (ParseException e) {
@@ -196,11 +198,8 @@ private static void viewReservationDetails() {
         System.out.printf("%-20s: %s\n", "Check-in Date", reservation.getCheckInDate());
         System.out.printf("%-20s: %s\n", "Check-out Date", reservation.getCheckOutDate());
         
-        // Calculate total cost using the calculateTotalCost method
-        BigDecimal calculatedTotalCost = createReservationSessionBean.calculateTotalCost(
-            reservation.getRoomType(), reservation.getCheckInDate(), reservation.getCheckOutDate()).multiply(BigDecimal.valueOf(reservation.getNumberOfRooms()));
         
-        System.out.printf("%-20s: %s\n", "Total Cost", calculatedTotalCost);
+        System.out.printf("%-20s: %s\n", "Total Cost", reservation.getTotalCost());
         System.out.printf("%-20s: %s\n", "Status", reservation.getStatus());
         System.out.printf("%-20s: %d\n", "Number of Rooms", reservation.getNumberOfRooms());
         System.out.printf("%-20s: %s\n", "Room Type", reservation.getRoomType().getName());

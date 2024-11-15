@@ -24,8 +24,8 @@ public interface CreateReservationSessionBeanLocal {
     
      public List<RoomType> searchAvailableRooms(Date checkInDate, Date checkOutDate);
 
-    // Calculate total cost based on room type and date range
-    public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate);
+//    // Calculate total cost based on room type and date range
+//    public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate);
 
     // View a specific customer reservation
     public Reservation viewCustomerReservation(Long customerId, Long reservationId);
@@ -44,6 +44,8 @@ public interface CreateReservationSessionBeanLocal {
     public Reservation walkInReserveRoom(String firstName, String lastName, String phoneNumber, Long roomTypeId, int numberOfRooms, Date checkInDate, Date checkOutDate) throws RoomTypeNotFoundException, RoomTypeUnavailableException;
 
     public Reservation findReservationById(Long reservationId) throws ReservationNotFoundException;
+
+    public BigDecimal calculateTotalCostForOnlineReservation(RoomType roomType, Date checkInDate, Date checkOutDate, int numberOfRooms);
 
  
 }

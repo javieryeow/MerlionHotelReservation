@@ -77,7 +77,7 @@ public class Main {
         startManagementClient();
     }
     
-    public static void startManagementClient() throws RoomTypeNotFoundException, ReservationNotFoundException, InvalidEmployeeLoginException, Exception {
+    public static void startManagementClient() throws RoomTypeNotFoundException, RoomNotFoundException, EmployeeAlreadyExistsException,RoomRateNotFoundException, ReservationNotFoundException, RoomTypeUnavailableException, InvalidEmployeeLoginException, Exception {
         System.out.println("*** Welcome to Employee Login System ***\n");
         System.out.print("Enter Employee Username: ");
         String username = sc.nextLine().trim();
@@ -451,7 +451,7 @@ public class Main {
             System.out.print("Enter Check In Date to allocate Reservations (dd-mm-yyyy): ");
             Date date = inputDateFormat.parse(sc.nextLine().trim());
             allocatingRoomSessionBean.allocateRoomForReservation(date);
-            System.out.print("All rooms for reservations on " + date + " have been allocated!");
+            System.out.println("All rooms for reservations on " + date + " have been allocated!");
         } catch (ParseException ex) {
             System.out.println("Invalid date format. Please enter the date in dd-mm-yyyy format.");
         }
@@ -610,7 +610,7 @@ public class Main {
                 "Room Rate ID", "Room Rate Name", "Room Type", "Rate Type", "Rate Per Night", "Start Date", "End Date");
 
         // Display each room rate's details in aligned columns
-        for (RoomRate roomRate : list) {
+        for (RoomRate roomRate : list) {    
             // Conditional date display: only show Start and End dates if applicable
             if (roomRate.getRateType() == RateType.PEAK || roomRate.getRateType() == RateType.PROMOTION) {
                 System.out.printf("%-15d %-30s %-20s %-15s %-15.2f %-15s %-15s\n",
@@ -715,13 +715,15 @@ public class Main {
             System.out.print("Enter check-out date (DD-MM-YYYY): ");
             Date checkOutDate = inputDateFormat.parse(sc.nextLine());
 
-            List<RoomType> availableRooms = createReservationSessionBean.searchAvailableRooms(checkInDate, checkOutDate);
-            if (availableRooms.isEmpty()) {
+            List<RoomType> availableRoomTypes = createReservationSessionBean.searchAvailableRooms(checkInDate, checkOutDate);
+            if (availableRoomTypes.isEmpty()) {
                 System.out.println("No available rooms for the selected dates.");
             } else {
                 System.out.println("Available room types:");
-                for (RoomType roomType : availableRooms) {
-                    System.out.println("- " + roomType.getName() + "- Room Type ID: "+ roomType.getRoomTypeId());
+                for (RoomType roomType : availableRoomTypes) {
+                    if (roomType.isEnabled()) {
+                        System.out.println("- " + roomType.getName() + "- Room Type ID: "+ roomType.getRoomTypeId());
+                    }
                 }
             }
         } catch (ParseException e) {
@@ -789,60 +791,41 @@ public class Main {
     try {
         // Retrieve the reservation by ID
         Reservation reservation = createReservationSessionBean.findReservationById(reservationId);
-
-        // Check if the reservation is in a state that allows check-in
-        if (reservation.getStatus() == Reservation.ReservationStatus.PENDING) {
-            // Call the allocation session bean to allocate rooms for the reservation's check-in date
-            allocatingRoomSessionBean.allocateRoomForReservation(reservation.getCheckInDate());
-
-            // Refresh reservation to get updated room allocations
-            reservation = createReservationSessionBean.findReservationById(reservationId);
-
-            // Check if rooms were allocated successfully
-            if (!reservation.getRooms().isEmpty()) {
-                // Change status to CHECKED_IN
-                createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_IN);
-                System.out.println("Guest successfully checked in. Room(s) allocated.");
-
-
-                // Display allocated rooms for confirmation
-                System.out.println("Allocated Room(s): ");
-                for (Room room : reservation.getRooms()) {
-                    System.out.println("- Room Number: " + room.getRoomNumber());
-                }
-            } else {
-                System.out.println("Check-in failed: No rooms were allocated. Please handle manually.");
-            }
-
-        } 
+        if (reservation.getStatus().equals(Reservation.ReservationStatus.CONFIRMED)) {
+            createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_IN);
+        }
+        List<Room> allocatedRooms = reservation.getRooms();   
+        System.out.println("Allocated Room(s) for Reservation: ");
+        for (Room room : allocatedRooms) {
+            System.out.println("- Room Number: " + room.getRoomNumber());
+        }
     } catch (ReservationNotFoundException ex) {
         System.out.println("Check-in failed: " + ex.getMessage());
-    }
+    }  
 }
 
 
-// Check-Out Guest Method
-private static void checkOutGuest() throws ReservationNotFoundException, Exception {
-    Scanner scanner = new Scanner(System.in);
-    System.out.print("Enter Reservation ID for check-out: ");
-    Long reservationId = scanner.nextLong();
+    // Check-Out Guest Method
+    private static void checkOutGuest() throws ReservationNotFoundException, Exception {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter Reservation ID for check-out: ");
+        Long reservationId = scanner.nextLong();
 
-    try {
-        // Retrieve the reservation by ID
-        Reservation reservation = createReservationSessionBean.findReservationById(reservationId);
-
-        // Check if the reservation is in a state that allows check-out
-        if (reservation.getStatus() == Reservation.ReservationStatus.CHECKED_IN) {
-            // Attempt to check out the guest
-            createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_OUT);
-            System.out.println("Guest successfully checked Out. Thank you for visiting!");
-
-        } 
-    } catch (ReservationNotFoundException ex) {
-        System.out.println("Check-out failed: " + ex.getMessage());
+        try {
+            // Retrieve the reservation by ID
+            Reservation reservation = createReservationSessionBean.findReservationById(reservationId);
+            if (reservation.getStatus().equals(Reservation.ReservationStatus.CHECKED_IN)) {
+                createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_OUT);
+            }
+            List<Room> checkedInRooms = reservation.getRooms();
+            for (Room room : checkedInRooms) {
+                room.setStatus(RoomStatus.AVAILABLE);
+            }
+            System.out.println("Check out completed! Have a nice day!");
+        } catch (ReservationNotFoundException ex) {
+            System.out.println("Check-out failed: " + ex.getMessage());
+        }
     }
-}
-
 }   
 
     

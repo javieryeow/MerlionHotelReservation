@@ -119,4 +119,52 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         return roomRate;
     }
     
+    @Override
+    public BigDecimal getReservationRate(RoomType roomType, Date date) throws RoomRateNotFoundException {
+        // Query to retrieve all active room rates for the specified room type and date
+        List<RoomRate> roomRates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
+                                      .setParameter("roomType", roomType)
+                                      .setParameter("date", date)
+                                      .getResultList();
+        List<RoomRate> normalRoomRates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND r.enabled = true AND r.rateType = :rateType", RoomRate.class)
+                                        .setParameter("roomType", roomType)
+                                        .setParameter("rateType", RoomRate.RateType.NORMAL)
+                                        .getResultList();
+        for (RoomRate roomRate : normalRoomRates) {
+            roomRates.add(roomRate);
+        }
+
+        BigDecimal applicableRate = null;
+
+        // Loop through the rates and select the most applicable one based on the type
+        for (RoomRate rate : roomRates) {
+            if (rate.getRateType() == RateType.PROMOTION) {
+                applicableRate = rate.getRatePerNight();
+                break;
+            }
+        }
+        if (applicableRate == null) {
+            for (RoomRate rate : roomRates) {
+               if (rate.getRateType() == RateType.PEAK) {
+                applicableRate = rate.getRatePerNight();
+                break;
+                } 
+            }
+        }
+        if (applicableRate == null) {
+            for (RoomRate rate : roomRates) {
+               if (rate.getRateType() == RateType.NORMAL) {
+                applicableRate = rate.getRatePerNight();
+                break;
+                } 
+            }
+        }
+
+        if (applicableRate == null){
+            throw new RoomRateNotFoundException("No applicable room rate found for the specified date and room type.");
+        }
+
+        return applicableRate;
+    }
+    
 }
