@@ -5,11 +5,14 @@
 package entity;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.OneToMany;
 
 /**
  *
@@ -29,7 +32,11 @@ public class Partner implements Serializable {
     @Column(nullable = false)
     private String password;
     
+    @OneToMany(mappedBy = "partner")
+    private List<Reservation> reservations;
+    
     public Partner() {
+        this.reservations = new ArrayList<Reservation>();
     }
 
     public Partner(String username, String password) {
@@ -96,6 +103,20 @@ public class Partner implements Serializable {
      */
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    /**
+     * @return the reservations
+     */
+    public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    /**
+     * @param reservations the reservations to set
+     */
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
     }
     
 }

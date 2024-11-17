@@ -73,7 +73,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
             RoomType roomType = em.find(RoomType.class, roomTypeId);
             if (roomType != null) {
                 List<Reservation> reservations = roomType.getReservations();
-                if (reservations.size() > 0) {
+                if (!reservations.isEmpty()) {
                     roomType.setDisabled();
                     } else {
                     List<RoomType> dependentRoomTypes = em.createQuery(
@@ -84,6 +84,7 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
                         dependent.setHigherRoomType(null);
                         em.merge(dependent);
                     }
+                    roomType.setHigherRoomType(null);
                     em.remove(roomType);
                     em.flush();
                 }

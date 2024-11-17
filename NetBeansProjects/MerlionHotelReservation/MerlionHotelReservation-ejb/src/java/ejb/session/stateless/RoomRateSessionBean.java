@@ -54,6 +54,7 @@ public class RoomRateSessionBean implements RoomRateSessionBeanRemote, RoomRateS
         }
 
         em.persist(roomRate);
+        em.flush();
         return roomRate.getRoomRateId();
     }
     

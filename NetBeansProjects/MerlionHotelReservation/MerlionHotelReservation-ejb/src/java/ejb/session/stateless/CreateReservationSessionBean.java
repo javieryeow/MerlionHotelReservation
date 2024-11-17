@@ -6,6 +6,7 @@ package ejb.session.stateless;
 
 import entity.Customer;
 import entity.Reservation;
+import entity.Room;
 import entity.RoomRate;
 import entity.RoomRate.RateType;
 import entity.RoomType;
@@ -51,25 +52,36 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         List<RoomType> allRoomTypes = em.createQuery("SELECT rt FROM RoomType rt", RoomType.class).getResultList();
 
         for (RoomType roomType : allRoomTypes) {
-            if (isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
+            if (isRoomTypeAvailable(roomType)) {
                 availableRoomTypes.add(roomType);
             }
         }
 
         return availableRoomTypes;
     }
-
-    private boolean isRoomTypeAvailable(RoomType roomType, Date checkInDate, Date checkOutDate) {
-        Query query = em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.roomType = :roomType AND r.checkInDate <= :checkOutDate AND r.checkOutDate >= :checkInDate");
+    
+    private boolean isRoomTypeAvailable(RoomType roomType) {
+        
+        Query query = em.createQuery("SELECT COUNT(r) FROM Room r WHERE r.roomType = :roomType AND r.status = :availableStatus");
         query.setParameter("roomType", roomType);
-        query.setParameter("checkInDate", checkInDate);
-        query.setParameter("checkOutDate", checkOutDate);
+        query.setParameter("availableStatus", Room.RoomStatus.AVAILABLE); // Assuming AVAILABLE status
 
-        Long reservedCount = (Long) query.getSingleResult();
-        int availableRooms = roomType.getCapacity();
+        Long availableRoomCount = (Long) query.getSingleResult();
 
-        return reservedCount < availableRooms;
+        return availableRoomCount > 0; // RoomType is available if there are any available rooms
     }
+    
+//    private boolean isRoomTypeAvailable(RoomType roomType, Date checkInDate, Date checkOutDate) {
+//        Query query = em.createQuery("SELECT COUNT(r) FROM Reservation r WHERE r.roomType = :roomType AND r.checkInDate <= :checkOutDate AND r.checkOutDate >= :checkInDate");
+//        query.setParameter("roomType", roomType);
+//        query.setParameter("checkInDate", checkInDate);
+//        query.setParameter("checkOutDate", checkOutDate);
+//
+//        Long reservedCount = (Long) query.getSingleResult();
+//        int availableRooms = roomType.getCapacity();
+//
+//        return reservedCount < availableRooms;
+//    }
     
     @Override
     public BigDecimal calculateTotalCostForOnlineReservation(RoomType roomType, Date checkInDate, Date checkOutDate, int numberOfRooms) {
@@ -232,7 +244,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
             throw new RoomTypeNotFoundException("Room Type with ID " + roomTypeId + " not found.");
         }
 
-        if (!isRoomTypeAvailable(roomType, checkInDate, checkOutDate)) {
+        if (!isRoomTypeAvailable(roomType)) {
             throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " does not have enough available rooms.");
         }
         

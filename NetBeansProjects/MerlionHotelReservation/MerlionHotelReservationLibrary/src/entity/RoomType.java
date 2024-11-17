@@ -19,6 +19,13 @@ import java.util.*;
 @Entity
 public class RoomType implements Serializable {
 
+    /**
+     * @param enabled the enabled to set
+     */
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -200,15 +207,19 @@ public class RoomType implements Serializable {
     public boolean isEnabled() {
         return enabled;
     }
+    
+    public boolean getEnabled() {
+        return enabled;
+    }
     /**
      * @param enabled the enabled to set
      */
     public void setEnabled() {
-        this.enabled = true;
+        this.setEnabled(true);
     }
     
     public void setDisabled() {
-        this.enabled = false;
+        this.setEnabled(false);
     }
 
     /**

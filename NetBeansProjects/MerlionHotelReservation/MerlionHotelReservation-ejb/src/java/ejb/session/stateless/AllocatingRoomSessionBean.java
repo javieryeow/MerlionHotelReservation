@@ -8,6 +8,7 @@ import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import entity.*;
+import entity.Reservation.ReservationStatus;
 import entity.Room.RoomStatus;
 import entity.RoomAllocationException.RoomAllocationExceptionType;
 import java.util.ArrayList;
@@ -40,8 +41,9 @@ public class AllocatingRoomSessionBean implements AllocatingRoomSessionBeanRemot
     
     @Override
     public void allocateRoomForReservation(Date checkInDate) {
-        Query query = em.createQuery("SELECT res FROM Reservation res WHERE res.checkInDate = :inCheckInDate");
+        Query query = em.createQuery("SELECT res FROM Reservation res WHERE res.checkInDate = :inCheckInDate AND res.status = :inStatus");
         query.setParameter("inCheckInDate", checkInDate);
+        query.setParameter("inStatus", ReservationStatus.PENDING);
         List<Reservation> reservations = (List<Reservation>) query.getResultList();
         for (Reservation r: reservations) {
             if(!hasAllocated(r)) {
