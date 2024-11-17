@@ -390,28 +390,56 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
         // Loop through each night from check-in to the day before check-out
         while (calendar.getTime().before(checkOutDate)) {
             Date currentDate = calendar.getTime();
-            List<RoomRate> rates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
-                                  .setParameter("roomType", roomType)
-                                  .setParameter("date", currentDate)
-                                  .getResultList();
-            RoomRate roomRateUsed = null;
-            for (RoomRate rate : rates) {
-                if (rate.getRateType() == RoomRate.RateType.PROMOTION) {
-                    // Promotion rate takes highest precedence
-                    roomRateUsed = rate;
-                } else if (rate.getRateType() == RoomRate.RateType.PEAK) {
-                    // Peak rate takes precedence over Normal if Promotion is not available
-                    roomRateUsed = rate;
-                } else if (rate.getRateType() == RoomRate.RateType.NORMAL) {
-                    // Normal rate is used if neither Promotion nor Peak rate is defined
-                    roomRateUsed = rate;
-                }
-                reservation.getRoomRates().add(roomRateUsed);
+            List<RoomRate> roomRates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
+                                      .setParameter("roomType", roomType)
+                                      .setParameter("date", currentDate)
+                                      .getResultList();
+            List<RoomRate> normalRoomRates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND r.enabled = true AND r.rateType = :rateType", RoomRate.class)
+                                            .setParameter("roomType", roomType)
+                                            .setParameter("rateType", RoomRate.RateType.NORMAL)
+                                            .getResultList();
+            for (RoomRate roomRate : normalRoomRates) {
+                roomRates.add(roomRate);
             }
-            // Move to the next day
+
+            BigDecimal applicableRate = null;
+            RoomRate roomRateUsed = null;
+
+            // Loop through the rates and select the most applicable one based on the type
+            for (RoomRate rate : roomRates) {
+                if (rate.getRateType() == RateType.PROMOTION) {
+                    applicableRate = rate.getRatePerNight();
+                    roomRateUsed = rate;
+                    break;
+                }
+            }
+            if (applicableRate == null) {
+                for (RoomRate rate : roomRates) {
+                   if (rate.getRateType() == RateType.PEAK) {
+                    applicableRate = rate.getRatePerNight();
+                    roomRateUsed = rate;
+                    break;
+                    } 
+                }
+            }
+            if (applicableRate == null) {
+                for (RoomRate rate : roomRates) {
+                   if (rate.getRateType() == RateType.NORMAL) {
+                    applicableRate = rate.getRatePerNight();
+                    roomRateUsed = rate;
+                    break;
+                    } 
+                }
+            }
+            roomRatesUsed.add(roomRateUsed);
             calendar.add(Calendar.DAY_OF_MONTH, 1);
-        }  
+        }
+        for (RoomRate rateToAdd : roomRatesUsed) {
+            reservation.getRoomRates().add(rateToAdd);
+        }
     }      
 }
+
+
 
 

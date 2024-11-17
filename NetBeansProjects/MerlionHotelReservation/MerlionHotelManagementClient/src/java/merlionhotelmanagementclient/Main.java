@@ -794,7 +794,7 @@ public class Main {
         if (reservation.getStatus().equals(Reservation.ReservationStatus.CONFIRMED)) {
             createReservationSessionBean.updateReservationStatus(reservationId, Reservation.ReservationStatus.CHECKED_IN);
         }
-        List<Room> allocatedRooms = reservation.getRooms();   
+        List<Room> allocatedRooms = reservation.getRooms();
         System.out.println("Allocated Room(s) for Reservation: ");
         for (Room room : allocatedRooms) {
             System.out.println("- Room Number: " + room.getRoomNumber());
@@ -819,7 +819,8 @@ public class Main {
             }
             List<Room> checkedInRooms = reservation.getRooms();
             for (Room room : checkedInRooms) {
-                room.setStatus(RoomStatus.AVAILABLE);
+                Long roomId = room.getRoomId();
+                roomSessionBean.changeRoomAvailability(roomId, RoomStatus.AVAILABLE);
             }
             System.out.println("Check out completed! Have a nice day!");
         } catch (ReservationNotFoundException ex) {

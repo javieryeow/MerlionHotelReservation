@@ -94,15 +94,21 @@ public class AllocatingRoomSessionBean implements AllocatingRoomSessionBeanRemot
                         RoomAllocationExceptionType type = RoomAllocationExceptionType.UPGRADE;
                         String issue = "Insufficient rooms of requested type, room of higher type was assigned!";
                         Long roomAllocationExceptionId = createRoomAllocationExceptionSessionBean.createRoomAllocationException(type, issue, r);
+                        RoomAllocationException exception = em.find(RoomAllocationException.class, roomAllocationExceptionId);
+                        r.setRoomAllocationException(exception);
                     } else {
                         RoomAllocationExceptionType type = RoomAllocationExceptionType.NO_UPGRADE;
                         String issue = "Insufficient rooms of requested type, insufficient rooms of higher type available for assignment!";
                         Long roomAllocationExceptionId = createRoomAllocationExceptionSessionBean.createRoomAllocationException(type, issue, r);
+                        RoomAllocationException exception = em.find(RoomAllocationException.class, roomAllocationExceptionId);
+                        r.setRoomAllocationException(exception);
                     }
                 } else {
                     RoomAllocationExceptionType type = RoomAllocationExceptionType.NO_UPGRADE;
                     String issue = "Insufficient rooms of requested type, no higher room type to be upgraded to!";
                     Long roomAllocationExceptionId = createRoomAllocationExceptionSessionBean.createRoomAllocationException(type, issue, r);
+                    RoomAllocationException exception = em.find(RoomAllocationException.class, roomAllocationExceptionId);
+                    r.setRoomAllocationException(exception);
                 }
                 for (Room room: confirmedRooms) {
                     r.getRooms().add(room);
