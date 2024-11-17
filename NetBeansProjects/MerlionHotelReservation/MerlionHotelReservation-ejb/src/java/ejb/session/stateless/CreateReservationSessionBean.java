@@ -22,6 +22,7 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.Query;
 import util.exception.InvalidStatusTransitionException;
 import util.exception.ReservationNotFoundException;
+import util.exception.RoomRateNotFoundException;
 import util.exception.RoomTypeNotFoundException;
 import util.exception.RoomTypeUnavailableException;
 
@@ -29,10 +30,15 @@ import util.exception.RoomTypeUnavailableException;
 public class CreateReservationSessionBean implements CreateReservationSessionBeanRemote, CreateReservationSessionBeanLocal {
 
     @EJB
+    private RoomRateSessionBeanLocal roomRateSessionBean;
+
+    @EJB
     private CreateRoomAllocationExceptionSessionBeanLocal createRoomAllocationExceptionSessionBean;
 
     @EJB
     private AllocatingRoomSessionBeanLocal allocatingRoomSessionBean;
+    
+    
     
     
     @PersistenceContext(unitName = "MerlionHotelReservation-ejbPU")
@@ -64,50 +70,84 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
 
         return reservedCount < availableRooms;
     }
-
+    
     @Override
-   public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate) {
+    public BigDecimal calculateTotalCostForOnlineReservation(RoomType roomType, Date checkInDate, Date checkOutDate, int numberOfRooms) {
     BigDecimal totalCost = BigDecimal.ZERO;
-
-    // Use Calendar for date manipulation
     Calendar calendar = Calendar.getInstance();
     calendar.setTime(checkInDate);
 
-    // Loop through each night from check-in to the day before check-out
-    while (calendar.getTime().before(checkOutDate)) {
+    // Adjust check-out date to standard check-out time (12 PM) for consistency
+    Calendar checkOutCalendar = Calendar.getInstance();
+    checkOutCalendar.setTime(checkOutDate);
+    checkOutCalendar.set(Calendar.HOUR_OF_DAY, 12);
+    checkOutCalendar.set(Calendar.MINUTE, 0);
+    Date adjustedCheckOutDate = checkOutCalendar.getTime();
+
+    while (calendar.getTime().before(adjustedCheckOutDate)) {
         Date currentDate = calendar.getTime();
-        BigDecimal nightlyRate = getApplicableRate(roomType, currentDate);
-        totalCost = totalCost.add(nightlyRate);
+
+        try {
+            // Use the getReservationRate method on RoomRateSessionBean
+            BigDecimal dailyRate = roomRateSessionBean.getReservationRate(roomType, currentDate);
+            BigDecimal dailyTotal = dailyRate.multiply(BigDecimal.valueOf(numberOfRooms));
+            totalCost = totalCost.add(dailyTotal);
+        } catch (RoomRateNotFoundException e) {
+            System.err.println("No applicable rate found for " + currentDate + ": " + e.getMessage());
+        }
 
         // Move to the next day
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        calendar.add(Calendar.DATE, 1);
     }
-
     return totalCost;
 }
 
-    private BigDecimal getApplicableRate(RoomType roomType, Date date) {
-        List<RoomRate> rates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
-                                  .setParameter("roomType", roomType)
-                                  .setParameter("date", date)
-                                  .getResultList();
 
-        BigDecimal applicableRate = BigDecimal.ZERO;
+//    @Override
+//    public BigDecimal calculateTotalCost(RoomType roomType, Date checkInDate, Date checkOutDate) {
+//        BigDecimal totalCost = BigDecimal.ZERO;
+//
+//        // Use Calendar for date manipulation
+//        Calendar calendar = Calendar.getInstance();
+//        calendar.setTime(checkInDate);
+//
+//        // Loop through each night from check-in to the day before check-out
+//        while (calendar.getTime().before(checkOutDate)) {
+//            Date currentDate = calendar.getTime();
+//            BigDecimal nightlyRate = getApplicableRate(roomType, currentDate);
+//            totalCost = totalCost.add(nightlyRate);
+//
+//            // Move to the next day
+//            calendar.add(Calendar.DAY_OF_MONTH, 1);
+//        }
+//
+//        return totalCost;
+//    }
 
-        for (RoomRate rate : rates) {
-            if (rate.getRateType() == RoomRate.RateType.PROMOTION) {
-                return rate.getRatePerNight();
-            } else if (rate.getRateType() == RoomRate.RateType.PEAK) {
-                applicableRate = applicableRate.max(rate.getRatePerNight());
-            } else if (rate.getRateType() == RoomRate.RateType.NORMAL && applicableRate.compareTo(rate.getRatePerNight()) < 0) {
-                applicableRate = rate.getRatePerNight();
-            } else if (rate.getRateType() == RoomRate.RateType.PUBLISHED && applicableRate.equals(BigDecimal.ZERO)) {
-                applicableRate = rate.getRatePerNight();
-            }
-        }
+//    private BigDecimal getApplicableRate(RoomType roomType, Date date) {
+//        List<RoomRate> rates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
+//                                  .setParameter("roomType", roomType)
+//                                  .setParameter("date", date)
+//                                  .getResultList();
+//
+//        BigDecimal applicableRate = BigDecimal.ZERO;
+//
+//        for (RoomRate rate : rates) {
+//            if (rate.getRateType() == RoomRate.RateType.PROMOTION) {
+//                // Promotion rate takes highest precedence
+//                return rate.getRatePerNight();
+//            } else if (rate.getRateType() == RoomRate.RateType.PEAK) {
+//                // Peak rate takes precedence over Normal if Promotion is not available
+//                applicableRate = applicableRate.max(rate.getRatePerNight());
+//            } else if (rate.getRateType() == RoomRate.RateType.NORMAL && applicableRate.equals(BigDecimal.ZERO)) {
+//                // Normal rate is used if neither Promotion nor Peak rate is defined
+//                applicableRate = rate.getRatePerNight();
+//            }
+//        }
+//
+//        return applicableRate;
+//    }
 
-        return applicableRate;
-    }
 
     @Override
     public void updateReservationStatus(Long reservationId, Reservation.ReservationStatus newStatus) 
@@ -161,7 +201,11 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     @Override
     public List<Reservation> viewAllReservations(Long customerId) {
         Customer customer = em.find(Customer.class, customerId);
-        return customer != null ? customer.getReservations() : new ArrayList<>();
+        Query query = em.createQuery("SELECT r FROM Reservation r WHERE r.customer = :inCustomer");
+        query.setParameter("inCustomer", customer);
+
+        return query.getResultList();
+
     }
     
    
@@ -192,7 +236,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
             throw new RoomTypeUnavailableException("Room Type " + roomType.getName() + " does not have enough available rooms.");
         }
         
-        BigDecimal totalCost = calculateTotalCost(roomType, checkInDate, checkOutDate).multiply(BigDecimal.valueOf(numberOfRooms));
+        BigDecimal totalCost = calculateTotalCostForOnlineReservation(roomType, checkInDate, checkOutDate, numberOfRooms);
 
             Reservation reservation = new Reservation();
             reservation.setCheckInDate(checkInDate);
@@ -207,6 +251,7 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
 
             em.persist(reservation);
             em.flush();
+            updateRoomRatesUsedForOnline(reservation.getReservationId(), roomType.getRoomTypeId(), checkInDate, checkOutDate);
             Calendar currentCalendar = Calendar.getInstance();
             Calendar checkInCalendar = Calendar.getInstance();
             checkInCalendar.setTime(checkInDate);
@@ -252,13 +297,14 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
     reservation.setStatus(Reservation.ReservationStatus.PENDING);
     reservation.setWalkInGuest(walkInGuest);
     reservation.setRoomType(roomType);
-    reservation.setNumberOfRooms(numberOfRooms); 
+    reservation.setNumberOfRooms(numberOfRooms);
     walkInGuest.getReservations().add(reservation);
     roomType.getReservations().add(reservation);
-
+    
     // Persist reservation
     em.persist(reservation);
     em.flush();
+    updateRoomRatesUsedForWalkIn(reservation.getReservationId(), roomType.getRoomTypeId(), checkInDate, checkOutDate);
 
     // Determine if immediate allocation is required
     Calendar currentCalendar = Calendar.getInstance();
@@ -325,10 +371,75 @@ public class CreateReservationSessionBean implements CreateReservationSessionBea
 
     // Multiply the published rate by the number of days
     return publishedRate.multiply(BigDecimal.valueOf(daysBetween));
-}
+    }
     
- 
+    private void updateRoomRatesUsedForWalkIn(Long reservationId, Long roomTypeId, Date checkInDate, Date checkOutDate) {
+        Reservation reservation = em.find(Reservation.class, reservationId);
+        RoomType roomtype = em.find(RoomType.class, roomTypeId);
+        RoomRate publishedRate = roomtype.getRoomRates().stream().filter(rate -> rate.getRateType() == RateType.PUBLISHED).findFirst().orElse(null);
+        reservation.getRoomRates().add(publishedRate);
+    }
+    
+    private void updateRoomRatesUsedForOnline(Long reservationId, Long roomTypeId, Date checkInDate, Date checkOutDate) {
+        List<RoomRate> roomRatesUsed = new ArrayList<RoomRate>();
+        Reservation reservation = em.find(Reservation.class, reservationId);
+        RoomType roomType = em.find(RoomType.class, roomTypeId);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(checkInDate);
 
+        // Loop through each night from check-in to the day before check-out
+        while (calendar.getTime().before(checkOutDate)) {
+            Date currentDate = calendar.getTime();
+            List<RoomRate> roomRates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND :date BETWEEN r.startDate AND r.endDate AND r.enabled = true", RoomRate.class)
+                                      .setParameter("roomType", roomType)
+                                      .setParameter("date", currentDate)
+                                      .getResultList();
+            List<RoomRate> normalRoomRates = em.createQuery("SELECT r FROM RoomRate r WHERE r.roomType = :roomType AND r.enabled = true AND r.rateType = :rateType", RoomRate.class)
+                                            .setParameter("roomType", roomType)
+                                            .setParameter("rateType", RoomRate.RateType.NORMAL)
+                                            .getResultList();
+            for (RoomRate roomRate : normalRoomRates) {
+                roomRates.add(roomRate);
+            }
+
+            BigDecimal applicableRate = null;
+            RoomRate roomRateUsed = null;
+
+            // Loop through the rates and select the most applicable one based on the type
+            for (RoomRate rate : roomRates) {
+                if (rate.getRateType() == RateType.PROMOTION) {
+                    applicableRate = rate.getRatePerNight();
+                    roomRateUsed = rate;
+                    break;
+                }
+            }
+            if (applicableRate == null) {
+                for (RoomRate rate : roomRates) {
+                   if (rate.getRateType() == RateType.PEAK) {
+                    applicableRate = rate.getRatePerNight();
+                    roomRateUsed = rate;
+                    break;
+                    } 
+                }
+            }
+            if (applicableRate == null) {
+                for (RoomRate rate : roomRates) {
+                   if (rate.getRateType() == RateType.NORMAL) {
+                    applicableRate = rate.getRatePerNight();
+                    roomRateUsed = rate;
+                    break;
+                    } 
+                }
+            }
+            roomRatesUsed.add(roomRateUsed);
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        for (RoomRate rateToAdd : roomRatesUsed) {
+            reservation.getRoomRates().add(rateToAdd);
+        }
+    }      
 }
+
+
 
 

@@ -32,4 +32,6 @@ public interface RoomRateSessionBeanRemote {
     public List<RoomRate> viewAllRoomRates();
     
     public RoomRate findRoomRateById(Long roomRateId) throws RoomRateNotFoundException;
+    
+    public BigDecimal getReservationRate(RoomType roomType, Date date) throws RoomRateNotFoundException;
 }

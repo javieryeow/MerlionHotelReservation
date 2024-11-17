@@ -42,7 +42,7 @@ public class Reservation implements Serializable {
     @ManyToMany
     private List<RoomRate> roomRates;
     
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private List<Room> rooms;
     
     @ManyToOne(optional = true)

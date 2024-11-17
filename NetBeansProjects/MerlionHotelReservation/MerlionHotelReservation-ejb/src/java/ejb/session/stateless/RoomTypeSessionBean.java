@@ -76,6 +76,14 @@ public class RoomTypeSessionBean implements RoomTypeSessionBeanRemote, RoomTypeS
                 if (reservations.size() > 0) {
                     roomType.setDisabled();
                     } else {
+                    List<RoomType> dependentRoomTypes = em.createQuery(
+                        "SELECT r FROM RoomType r WHERE r.higherRoomType = :roomType", RoomType.class)
+                        .setParameter("roomType", roomType)
+                        .getResultList();
+                    for (RoomType dependent : dependentRoomTypes) {
+                        dependent.setHigherRoomType(null);
+                        em.merge(dependent);
+                    }
                     em.remove(roomType);
                     em.flush();
                 }
